@@ -1,324 +1,189 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>문제집 추천 알고리즘</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    /* Pantone 근사값
-       - PQ 182C : #F5B6CD
-       - PQ 183C : #F2779A
-       - PQ 2346C: #1E2A78 */
-    :root{
-      --p182:#F5B6CD;
-      --p183:#F2779A;
-      --p2346:#1E2A78;
-
-      --glass:rgba(255,255,255,0.10);
-      --glass-border:rgba(255,255,255,0.16);
-      --text:#F2F4F7;
-      --muted:#98A2B3;
-      --primary1:#5B78F6;
-      --primary2:#3AD1FF;
-    }
-
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:"Noto Sans KR",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(1000px 600px at 80% -10%, var(--p183) 0%, transparent 60%),
-        radial-gradient(800px 500px at -10% 20%, var(--p182) 0%, transparent 55%),
-        linear-gradient(160deg, var(--p2346) 0%, #0A0B18 60%, #070912 100%);
-      display:flex;justify-content:center;align-items:center;
-      padding:20px;
-    }
-
-    .shell{
-      width: 420px;
-      background: var(--glass);
-      backdrop-filter: blur(14px);
-      border: 1px solid var(--glass-border);
-      border-radius: 18px;
-      box-shadow: 0 12px 36px rgba(0,0,0,0.45);
-      display:flex;flex-direction:column;
-      height: 680px;        /* 고정 */
-      max-height: 92vh;     /* 소형 화면 보호 */
-      overflow:hidden;
-    }
-
-    .header{
-      padding:16px 18px;
-      border-bottom:1px solid var(--glass-border);
-      font-weight:700;
-      letter-spacing:.2px;
-    }
-
-    .display{
-      height: 430px;        /* 고정 높이 */
-      overflow-y:auto;      /* 스크롤 가능 */
-      padding:16px;
-    }
-
-    .msg{
-      background: linear-gradient(135deg, #2B2F5A, #1B1F3A);
-      border:1px solid rgba(255,255,255,0.06);
-      border-radius:12px;
-      padding:12px 14px;
-      margin-bottom:10px;
-      animation:fadeIn .28s ease;
-      line-height:1.55;
-    }
-
-    .options{
-      padding:12px 14px;
-      display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
-      border-top:1px solid var(--glass-border);
-      min-height:72px;
-    }
-
-    .foot{
-      display:flex;gap:10px; padding:12px 14px; border-top:1px solid var(--glass-border);
-    }
-
-    button{
-      border:0;cursor:pointer;border-radius:12px;
-      padding:10px 16px;font-weight:700;color:#fff;
-      background: linear-gradient(135deg, var(--primary1), var(--primary2));
-      transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
-    }
-    button:hover{ transform: translateY(-1px); box-shadow:0 0 12px rgba(90,120,250,0.55); }
-    button.secondary{
-      background: rgba(255,255,255,0.12);
-      border:1px solid var(--glass-border);
-      color:#E7E9EE;
-    }
-    button.ghost{
-      background: transparent;
-      border:1px dashed var(--glass-border);
-      color:#E7E9EE;
-    }
-
-    .survey{
-      border-top:1px solid var(--glass-border);
-      padding:12px 14px;
-      display:none;  /* 완료시에만 노출 */
-    }
-    .survey .label{
-      font-size:14px;color:var(--muted);margin-bottom:8px;
-    }
-    .survey .grid{
-      display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
-    }
-    .survey button{ padding:8px 12px; border-radius:10px; font-weight:600; }
-
-    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>문제집 추천 알고리즘</title>
+<style>
+  body {
+    background: #fff;
+    font-family: "Noto Sans KR", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .chatbox {
+    width: 420px;
+    height: 660px;
+    background: #F5B6CD; /* 기본 182C */
+    border: 4px solid #F2779A; /* 183C */
+    border-radius: 16px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .header {
+    background: #1E2A78; /* 2346C */
+    color: #fff;
+    text-align: center;
+    padding: 12px;
+    font-weight: 700;
+  }
+  .display {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+  }
+  .msg {
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  .options, .foot {
+    display: flex;
+    justify-content: space-around;
+    gap: 8px;
+    padding: 10px;
+  }
+  button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #1E2A78;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  button:hover { transform: scale(1.05); }
+  .survey {
+    padding: 12px;
+    border-top: 2px solid #F2779A;
+  }
+  .survey textarea {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    padding: 8px;
+    margin-top: 6px;
+    resize: none;
+    font-family: inherit;
+  }
+  .hidden { display: none; }
+  .rating input { margin-right: 4px; }
+</style>
 </head>
 <body>
-  <div class="shell">
-    <div class="header">문제집 추천 알고리즘</div>
-
-    <div id="display" class="display"></div>
-    <div id="options" class="options"></div>
-
-    <!-- 설문: 답장 완료시에만 노출 -->
-    <div id="survey" class="survey">
-      <div class="label">이 알고리즘을 어떻게 평가하시겠습니까?</div>
-      <div class="grid" id="surveyGrid">
-        <button class="ghost" data-rate="5">매우 만족</button>
-        <button class="ghost" data-rate="4">만족</button>
-        <button class="ghost" data-rate="3">보통</button>
-        <button class="ghost" data-rate="2">불만족</button>
-        <button class="ghost" data-rate="1">매우 불만</button>
-      </div>
+<div class="chatbox">
+  <div class="header">문제집 추천 알고리즘</div>
+  <div id="display" class="display"></div>
+  <div id="survey" class="survey hidden">
+    <div>이 알고리즘을 어떻게 평가하시겠습니까?</div>
+    <div class="rating">
+      <label><input type="radio" name="rate" value="5">5점</label>
+      <label><input type="radio" name="rate" value="4">4점</label>
+      <label><input type="radio" name="rate" value="3">3점</label>
+      <label><input type="radio" name="rate" value="2">2점</label>
+      <label><input type="radio" name="rate" value="1">1점</label>
     </div>
-
-    <div class="foot">
-      <button id="backBtn" class="secondary">뒤로가기</button>
-      <button id="restartBtn" class="secondary">처음으로</button>
-    </div>
+    <textarea id="comment" rows="3" placeholder="의견을 작성해주세요..."></textarea>
+    <button id="submitFeedback">제출</button>
   </div>
+  <div class="foot">
+    <button id="backBtn">뒤로가기</button>
+    <button id="restartBtn">처음으로</button>
+    <button id="heartBtn">❤️</button>
+  </div>
+</div>
 
-  <script>
-    // 데이터
-    const bookData = {
-      "개념서": {
-        1: ["수학의 바이블","마플 교과서","수학의 왕도","올림포스 수학","개념 플러스 유형 고등 수학","이유있는 수학 개념 SOS","셀파 해법수학"],
-        2: ["수학의 샘","개념 쎈","풍산자","개념원리"],
-        3: ["기본 수학의 정석","수학중심 고등수학","메가스터디 문제 기본서 CPR수학","더 개념 블랙라벨"],
-        4: ["실력 수학의 정석","숨마쿰라우데"]
-      },
-      "유형·심화서": {
-        1: ["수력충전","수학의 바이블 BOB","개념 플러스 유형 라이트","라이트 쎈","유형 해결의 법칙","올림포스 닥터링"],
-        2: ["개념원리 RPM","풍산자 필수유형","내공의 힘","올리드","하이라이트 단기 특강","심플 자이스토리"],
-        3: ["쎈 수학","마플 시너지","일등급 수학","1등급 만들기"],
-        4: ["일품","올림포스 고난도","수능다큐","절대등급","유형+내신 고쟁이","블랙라벨","내신 하이앤드","현우진 뉴런-시냅스","수학의 신"],
-        5: ["TOT","531 하이퍼","절대등급 코드엠","현우진 드릴"]
-      },
-      "기출":[
-        "자이스토리","짱 어려운 유형 고난도 4점짜리 수학","너희들의 기출문제","마플 수능기출총정리","수능 기출의 바이블",
-        "실전+수능 고쟁이","어삼쉬사","너기출","수능 기출의 미래","쎈 기출","티오피 클래스 수능 기출문제집",
-        "이동훈 기출문제집","담금질","백미","기출의 고백","마더텅","올림포스 기출문제집"
-      ]
-    };
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwrC2UrWD0QeYKU4q7bnst9Jo7y26E7Jpg2H7II2hSHHAaIcKtdkXdG0hJWwKBXS32b/exec";
 
-    // 상태 & DOM
-    const display = document.getElementById('display');
-    const options = document.getElementById('options');
-    const survey  = document.getElementById('survey');
-    const surveyGrid = document.getElementById('surveyGrid');
-    const backBtn = document.getElementById('backBtn');
-    const restartBtn = document.getElementById('restartBtn');
+const display = document.getElementById('display');
+const survey = document.getElementById('survey');
+const submitBtn = document.getElementById('submitFeedback');
+const heartBtn = document.getElementById('heartBtn');
+const backBtn = document.getElementById('backBtn');
+const restartBtn = document.getElementById('restartBtn');
 
-    // step: 'type' | 'level' | 'done'
-    let step = 'type';
-    let selectedType = null;
-    let selectedLevel = null;
+function addMsg(text){
+  const m = document.createElement('div');
+  m.className = 'msg';
+  m.textContent = text;
+  display.appendChild(m);
+  display.scrollTop = display.scrollHeight;
+}
 
-    // 스냅샷 스택(뒤로가기용)
-    const history = [];
-    function pushSnapshot(){
-      history.push({
-        step,
-        selectedType,
-        selectedLevel,
-        html: display.innerHTML,
-        surveyVisible: (survey.style.display !== 'none'),
-        scrollTop: display.scrollTop
-      });
-    }
-    function popSnapshot(){
-      return history.pop() || null;
-    }
+// === 챗봇 시뮬레이션 ===
+function start(){
+  display.innerHTML = "";
+  addMsg("안녕하세요. 원하시는 문제집 종류를 선택해 주세요.");
+  survey.classList.add('hidden');
+  setTimeout(()=>addMsg("추천이 완료되었습니다."),1500);
+  setTimeout(()=>survey.classList.remove('hidden'),2000);
+}
 
-    // UI 공통
-    function addMsg(text){
-      const el = document.createElement('div');
-      el.className = 'msg';
-      el.textContent = text;
-      display.appendChild(el);
-      display.scrollTop = display.scrollHeight;
-    }
-    function setOptions(labels, onClick){
-      options.innerHTML = '';
-      labels.forEach(label=>{
-        const b = document.createElement('button');
-        b.textContent = label;
-        b.onclick = ()=>{ pushSnapshot(); onClick(label); };
-        options.appendChild(b);
-      });
-    }
-    function showSurvey(){ survey.style.display = 'block'; }
-    function hideSurvey(){ survey.style.display = 'none'; }
-
-    // 흐름
-    function renderType(){
-      step = 'type';
-      hideSurvey();
-      display.innerHTML = '';
-      addMsg('문제집 종류를 선택해 주세요.');
-      setOptions(['개념서','유형·심화서','기출'], (type)=>{
-        selectedType = type;
-        if (type === '기출') recommend();
-        else renderLevel();
-      });
-    }
-
-    function renderLevel(){
-      step = 'level';
-      hideSurvey();
-      const max = (selectedType === '개념서') ? 4 : 5;
-      display.innerHTML = '';
-      addMsg(`${selectedType}의 난이도를 선택해 주세요 (1~${max})`);
-      const levels = Array.from({length:max},(_,i)=>String(i+1));
-      setOptions(levels, (lv)=>{
-        selectedLevel = parseInt(lv,10);
-        recommend();
-      });
-    }
-
-    function recommend(){
-      step = 'done';
-      hideSurvey();
-      options.innerHTML = '';
-
-      display.innerHTML = '';
-      if (selectedType === '기출'){
-        addMsg('추천 기출 목록:');
-        const list = bookData['기출'] || [];
-        if (list.length) list.forEach(n=>addMsg('· ' + n));
-        else addMsg('등록된 기출 문제집이 없습니다.');
-      }else{
-        const list = (bookData[selectedType] || {})[selectedLevel] || [];
-        addMsg(`추천 ${selectedType} (난이도 ${selectedLevel}) 목록:`);
-        if (list.length) list.forEach(n=>addMsg('· ' + n));
-        else addMsg('해당 조건에 맞는 문제집이 없습니다.');
-      }
-
-      // 완료 시에만 설문 보이기
-      showSurvey();
-    }
-
-    // 뒤로가기: 스냅샷 복원
-    backBtn.onclick = ()=>{
-      const snap = popSnapshot();
-      if (!snap) return;
-
-      // 상태 복원
-      step = snap.step;
-      selectedType = snap.selectedType;
-      selectedLevel = snap.selectedLevel;
-
-      // 화면 복원
-      display.innerHTML = snap.html;
-      display.scrollTop = snap.scrollTop || 0;
-
-      // 설문 표시 상태 복원(뒤로가면 대개 false지만, 스냅샷 기준으로 엄밀 복원)
-      survey.style.display = snap.surveyVisible ? 'block' : 'none';
-
-      // 옵션만 현재 step에 맞게 다시 렌더
-      if (step === 'type'){
-        setOptions(['개념서','유형·심화서','기출'], (type)=>{
-          selectedType = type;
-          if (type === '기출') recommend();
-          else renderLevel();
-        });
-      } else if (step === 'level'){
-        const max = (selectedType === '개념서') ? 4 : 5;
-        const levels = Array.from({length:max},(_,i)=>String(i+1));
-        setOptions(levels, (lv)=>{
-          selectedLevel = parseInt(lv,10);
-          recommend();
-        });
-      } else if (step === 'done'){
-        // 드문 케이스: done 스냅샷으로 돌아간 경우 옵션 없음 + 설문 표시는 스냅샷대로
-        options.innerHTML = '';
-      }
-    };
-
-    // 처음으로
-    restartBtn.onclick = ()=>{
-      hideSurvey();
-      history.length = 0;
-      selectedType = null;
-      selectedLevel = null;
-      renderType();
-    };
-
-    // 설문 처리
-    surveyGrid.addEventListener('click', (e)=>{
-      if (!(e.target instanceof HTMLButtonElement)) return;
-      const rate = e.target.getAttribute('data-rate');
-      addMsg(`평가해 주셔서 감사합니다. (선택: ${rate})`);
-      hideSurvey();
+// === 설문 제출 ===
+submitBtn.onclick = async () => {
+  const rating = document.querySelector('input[name="rate"]:checked');
+  const comment = document.getElementById('comment').value.trim();
+  if(!rating){ alert("평점을 선택해주세요."); return; }
+  const data = { rating: rating.value, comment };
+  try{
+    await fetch(API_URL, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(data)
     });
+    alert("제출되었습니다! 감사합니다.");
+    survey.classList.add('hidden');
+    document.querySelectorAll('input[name="rate"]').forEach(r=>r.checked=false);
+    document.getElementById('comment').value="";
+  }catch(e){
+    alert("제출 중 오류가 발생했습니다.");
+  }
+};
 
-    // 시작
-    renderType();
-  </script>
+// === 설문 결과 보기 ===
+heartBtn.onclick = async ()=>{
+  const pw = prompt("비밀번호를 입력하세요:");
+  if(pw !== "0411"){ alert("비밀번호가 틀렸습니다."); return; }
+  display.innerHTML = "";
+  addMsg("설문 데이터를 불러오는 중...");
+  try{
+    const res = await fetch(API_URL);
+    const list = await res.json();
+    const grouped = {};
+    list.forEach(item=>{
+      if(!grouped[item.rating]) grouped[item.rating] = [];
+      grouped[item.rating].push(item.comment);
+    });
+    display.innerHTML = "";
+    Object.keys(grouped).sort((a,b)=>b-a).forEach(r=>{
+      const box = document.createElement('div');
+      box.className='msg';
+      box.style.background="#fff";
+      box.style.border=`2px solid #1E2A78`;
+      box.innerHTML = `<b>${r}점</b><br>${grouped[r].map(c=>"- "+c).join("<br>")}`;
+      display.appendChild(box);
+    });
+  }catch(e){
+    addMsg("데이터를 불러오는 중 오류 발생");
+  }
+};
+
+// === 버튼 초기화 ===
+backBtn.onclick = ()=>{ start(); };
+restartBtn.onclick = ()=>{ start(); };
+
+// 초기 시작
+start();
+</script>
 </body>
 </html>
-
