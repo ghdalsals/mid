@@ -1,189 +1,311 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>문제집 추천 알고리즘</title>
+
 <style>
-  body {
-    background: #fff;
-    font-family: "Noto Sans KR", sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-  }
-  .chatbox {
-    width: 420px;
-    height: 660px;
-    background: #F5B6CD; /* 기본 182C */
-    border: 4px solid #F2779A; /* 183C */
-    border-radius: 16px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.2);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  .header {
-    background: #1E2A78; /* 2346C */
-    color: #fff;
-    text-align: center;
-    padding: 12px;
-    font-weight: 700;
-  }
-  .display {
-    flex: 1;
-    padding: 16px;
-    overflow-y: auto;
-  }
-  .msg {
-    background: #fff;
-    border-radius: 10px;
-    padding: 10px 14px;
-    margin-bottom: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  }
-  .options, .foot {
-    display: flex;
-    justify-content: space-around;
-    gap: 8px;
-    padding: 10px;
-  }
-  button {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 10px;
-    background: #1E2A78;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-  }
-  button:hover { transform: scale(1.05); }
-  .survey {
-    padding: 12px;
-    border-top: 2px solid #F2779A;
-  }
-  .survey textarea {
-    width: 100%;
-    border-radius: 10px;
-    border: 1px solid #ccc;
-    padding: 8px;
-    margin-top: 6px;
-    resize: none;
-    font-family: inherit;
-  }
-  .hidden { display: none; }
-  .rating input { margin-right: 4px; }
+:root {
+  --theme-bg: #E9C4D7;        /* 채팅창 내부 */
+  --button-bg: #A13D63;       /* 버튼 색상 */
+  --outer-bg: #FFFFFF;        /* 외부 배경 */
+  --text-main: #000000;
+  --text-light: #FFFFFF;
+  --highlight: rgba(255,192,203,0.8);
+  --radius: 25px;
+}
+
+body {
+  background-color: var(--outer-bg);
+  font-family: 'Noto Sans KR', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.chat-container {
+  background-color: var(--theme-bg);
+  width: 420px;
+  min-height: 600px;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  animation: fadeIn 0.7s ease;
+}
+
+@keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+#chat-content {
+  flex-grow: 1;
+  color: var(--text-main);
+  font-size: 1rem;
+}
+
+.button {
+  background-color: var(--button-bg);
+  color: var(--text-light);
+  border: none;
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  margin: 8px 0;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.button:hover {
+  background-color: var(--highlight);
+  color: #000;
+  transform: scale(1.05);
+}
+
+.bottom-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.fade {
+  animation: fadeIn 0.5s ease;
+}
+
+/* 넘패드 스타일 */
+#numpad {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.numpad-container {
+  background-color: var(--theme-bg);
+  padding: 20px;
+  border-radius: var(--radius);
+  display: grid;
+  grid-template-columns: repeat(3, 60px);
+  grid-gap: 10px;
+  justify-content: center;
+  text-align: center;
+}
+
+.numpad-button {
+  background-color: var(--button-bg);
+  color: var(--text-light);
+  font-size: 1.2rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.numpad-button:hover {
+  background-color: var(--highlight);
+  color: var(--text-main);
+}
 </style>
 </head>
+
 <body>
-<div class="chatbox">
-  <div class="header">문제집 추천 알고리즘</div>
-  <div id="display" class="display"></div>
-  <div id="survey" class="survey hidden">
-    <div>이 알고리즘을 어떻게 평가하시겠습니까?</div>
-    <div class="rating">
-      <label><input type="radio" name="rate" value="5">5점</label>
-      <label><input type="radio" name="rate" value="4">4점</label>
-      <label><input type="radio" name="rate" value="3">3점</label>
-      <label><input type="radio" name="rate" value="2">2점</label>
-      <label><input type="radio" name="rate" value="1">1점</label>
-    </div>
-    <textarea id="comment" rows="3" placeholder="의견을 작성해주세요..."></textarea>
-    <button id="submitFeedback">제출</button>
+<div class="chat-container">
+  <div id="chat-content"></div>
+
+  <!-- 하단 버튼바 (항상 존재) -->
+  <div class="bottom-bar">
+    <button class="button" id="backBtn">🔙 뒤로가기</button>
+    <button class="button" id="homeBtn">🏠 처음으로</button>
+    <button class="button" id="heartBtn">💖</button>
   </div>
-  <div class="foot">
-    <button id="backBtn">뒤로가기</button>
-    <button id="restartBtn">처음으로</button>
-    <button id="heartBtn">❤️</button>
+</div>
+
+<!-- 넘패드 -->
+<div id="numpad">
+  <div class="numpad-container">
+    <button class="numpad-button">1</button>
+    <button class="numpad-button">2</button>
+    <button class="numpad-button">3</button>
+    <button class="numpad-button">4</button>
+    <button class="numpad-button">5</button>
+    <button class="numpad-button">6</button>
+    <button class="numpad-button">7</button>
+    <button class="numpad-button">8</button>
+    <button class="numpad-button">9</button>
+    <button class="numpad-button">0</button>
+    <button class="numpad-button" id="clearBtn">Clear</button>
+    <button class="numpad-button" id="enterBtn">Enter</button>
   </div>
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbwrC2UrWD0QeYKU4q7bnst9Jo7y26E7Jpg2H7II2hSHHAaIcKtdkXdG0hJWwKBXS32b/exec";
+// ✅ Google Apps Script URL
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkp09NYXwtejuByVP7Rd9oOMNkuWJRoBkggfu2mwlcBdfkbSoc-maEflfpLhSa3Oq_/exec";
 
-const display = document.getElementById('display');
-const survey = document.getElementById('survey');
-const submitBtn = document.getElementById('submitFeedback');
-const heartBtn = document.getElementById('heartBtn');
-const backBtn = document.getElementById('backBtn');
-const restartBtn = document.getElementById('restartBtn');
-
-function addMsg(text){
-  const m = document.createElement('div');
-  m.className = 'msg';
-  m.textContent = text;
-  display.appendChild(m);
-  display.scrollTop = display.scrollHeight;
-}
-
-// === 챗봇 시뮬레이션 ===
-function start(){
-  display.innerHTML = "";
-  addMsg("안녕하세요. 원하시는 문제집 종류를 선택해 주세요.");
-  survey.classList.add('hidden');
-  setTimeout(()=>addMsg("추천이 완료되었습니다."),1500);
-  setTimeout(()=>survey.classList.remove('hidden'),2000);
-}
-
-// === 설문 제출 ===
-submitBtn.onclick = async () => {
-  const rating = document.querySelector('input[name="rate"]:checked');
-  const comment = document.getElementById('comment').value.trim();
-  if(!rating){ alert("평점을 선택해주세요."); return; }
-  const data = { rating: rating.value, comment };
-  try{
-    await fetch(API_URL, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(data)
-    });
-    alert("제출되었습니다! 감사합니다.");
-    survey.classList.add('hidden');
-    document.querySelectorAll('input[name="rate"]').forEach(r=>r.checked=false);
-    document.getElementById('comment').value="";
-  }catch(e){
-    alert("제출 중 오류가 발생했습니다.");
-  }
+// ✅ 문제집 데이터
+const data = {
+  "개념서": {
+    1: ["수학의 바이블","마플 교과서","수학의 왕도","올림포스 수학","개념 플러스 유형 고등 수학","이유있는 수학 개념 SOS","셀파 해법수학"],
+    2: ["수학의 샘","개념 쎈","풍산자","개념원리"],
+    3: ["기본 수학의 정석","수학중심 고등수학","메가스터디 문제 기본서 CPR수학","더 개념 블랙라벨"],
+    4: ["실력 수학의 정석","숨마쿰라우데"]
+  },
+  "유형 심화서": {
+    1: ["수력충전","수학의 바이블 BOB","개념 플러스 유형 라이트","라이트 쎈","유형 해결의 법칙","올림포스 닥터링"],
+    2: ["개념원리 RPM","풍산자 필수유형","내공의 힘","올리드","하이라이트 단기 특강","심플 자이스토리"],
+    3: ["쎈 수학","마플 시너지","일등급 수학","1등급 만들기"],
+    4: ["일품","울림포스 고난도","수능다큐","절대등급","유형+내신 고쟁이","블랙라벨","내신 하이앤드","현우진 뉴런-시냅스","수학의 신"],
+    5: ["TOT","531 하이퍼","절대등급 코드엠","현우진 드릴"]
+  },
+  "기출": ["자이스토리","짱 어려운 유형 고난도 4점짜리 수학","너희들의 기출문제","마플 수능기출총정리","수능 기출의 바이블","실전+수능 고쟁이","어삼쉬사","너기출","수능 기출의 미래","쎈 기출","티오피 클래스 수능 기출문제집","이동훈 기출문제집","담금질","백미","기출의 고백","마더텅","올림포스 기출문제집"]
 };
 
-// === 설문 결과 보기 ===
-heartBtn.onclick = async ()=>{
-  const pw = prompt("비밀번호를 입력하세요:");
-  if(pw !== "0411"){ alert("비밀번호가 틀렸습니다."); return; }
-  display.innerHTML = "";
-  addMsg("설문 데이터를 불러오는 중...");
-  try{
-    const res = await fetch(API_URL);
-    const list = await res.json();
-    const grouped = {};
-    list.forEach(item=>{
-      if(!grouped[item.rating]) grouped[item.rating] = [];
-      grouped[item.rating].push(item.comment);
-    });
-    display.innerHTML = "";
-    Object.keys(grouped).sort((a,b)=>b-a).forEach(r=>{
-      const box = document.createElement('div');
-      box.className='msg';
-      box.style.background="#fff";
-      box.style.border=`2px solid #1E2A78`;
-      box.innerHTML = `<b>${r}점</b><br>${grouped[r].map(c=>"- "+c).join("<br>")}`;
-      display.appendChild(box);
-    });
-  }catch(e){
-    addMsg("데이터를 불러오는 중 오류 발생");
+let currentPage = "home";
+let selectedType = "";
+let selectedLevel = "";
+let numpadCode = "";
+
+// 초기화
+function loadHome() {
+  currentPage = "home";
+  selectedType = "";
+  selectedLevel = "";
+  const chat = document.getElementById("chat-content");
+  chat.innerHTML = `
+    <div class="fade">
+      <h3>어떤 문제집 추천이 필요하신가요?</h3>
+      <button class="button" onclick="selectType('개념서')">개념서</button>
+      <button class="button" onclick="selectType('유형 심화서')">유형 심화서</button>
+      <button class="button" onclick="selectType('기출')">기출</button>
+    </div>
+  `;
+}
+
+function selectType(type) {
+  selectedType = type;
+  currentPage = "level";
+  const chat = document.getElementById("chat-content");
+
+  if (type === "개념서") {
+    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` + [1,2,3,4].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
+  } else if (type === "유형 심화서") {
+    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` + [1,2,3,4,5].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
+  } else {
+    showRecommend();
   }
-};
+}
 
-// === 버튼 초기화 ===
-backBtn.onclick = ()=>{ start(); };
-restartBtn.onclick = ()=>{ start(); };
+function showRecommend(level) {
+  selectedLevel = level || "";
+  currentPage = "result";
+  const chat = document.getElementById("chat-content");
 
-// 초기 시작
-start();
+  let books;
+  if (selectedType === "기출") {
+    books = data["기출"];
+  } else {
+    books = data[selectedType][selectedLevel];
+  }
+
+  const recommend = books[Math.floor(Math.random() * books.length)];
+
+  chat.innerHTML = `
+    <div class="fade">
+      <h3>추천 문제집</h3>
+      <p><b>${recommend}</b></p>
+      <button class="button" onclick="openReviewInput('${recommend}')">평가하기</button>
+    </div>
+  `;
+}
+
+function openReviewInput(bookName) {
+  const chat = document.getElementById("chat-content");
+  chat.innerHTML += `
+    <div class="fade" id="reviewBox">
+      <textarea id="reviewText" rows="3" style="width:100%;border-radius:15px;padding:8px;margin-top:8px;"></textarea>
+      <button class="button" onclick="submitReview('${bookName}')">제출</button>
+    </div>
+  `;
+}
+
+async function submitReview(bookName) {
+  const text = document.getElementById("reviewText").value.trim();
+  if (!text) return alert("평가 내용을 입력해주세요!");
+
+  const params = new URLSearchParams({
+    action: "write",
+    type: selectedType,
+    level: selectedLevel,
+    book: bookName,
+    review: text
+  });
+
+  await fetch(`${SCRIPT_URL}?${params.toString()}`);
+  alert("평가가 제출되었습니다!");
+  document.getElementById("reviewBox").remove();
+}
+
+// 💖 넘패드 기능
+document.getElementById("heartBtn").addEventListener("click", () => {
+  document.getElementById("numpad").style.display = "flex";
+  numpadCode = "";
+});
+
+document.querySelectorAll(".numpad-button").forEach(btn => {
+  btn.addEventListener("click", e => {
+    const val = e.target.textContent;
+    if (val === "Clear") numpadCode = "";
+    else if (val === "Enter") checkCode();
+    else numpadCode += val;
+  });
+});
+
+function checkCode() {
+  if (numpadCode === "0411") {
+    loadReviews();
+  } else {
+    alert("잘못된 코드입니다.");
+  }
+  document.getElementById("numpad").style.display = "none";
+}
+
+async function loadReviews() {
+  const res = await fetch(`${SCRIPT_URL}?action=read`);
+  const data = await res.json();
+  const chat = document.getElementById("chat-content");
+  chat.innerHTML = "<h3>다른 사용자들의 평가</h3>";
+  data.slice(-10).forEach(r => {
+    chat.innerHTML += `
+      <div style="margin-bottom:10px;background:rgba(255,255,255,0.6);padding:8px;border-radius:10px;">
+        <b>${r.book}</b> (${r.type} ${r.level || ""})<br>
+        ${r.review}<br>
+        <small>${r.datetime}</small>
+      </div>
+    `;
+  });
+}
+
+// 뒤로가기 / 처음으로 버튼
+document.getElementById("homeBtn").addEventListener("click", loadHome);
+document.getElementById("backBtn").addEventListener("click", () => {
+  if (currentPage === "level") loadHome();
+  else if (currentPage === "result") selectType(selectedType);
+  else loadHome();
+});
+
+// 시작
+loadHome();
 </script>
 </body>
 </html>
