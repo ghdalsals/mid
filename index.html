@@ -1,42 +1,71 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>문제집 추천 알고리즘</title>
 <style>
-:root{
+:root {
   --bg:#f4f4f4;--chat-bg:#fff;--text:#1d1d1f;
   --btn:#e0e0e0;--btn-h:#d4d4d4;--btn-a:#c7c7c7;--bd:#ccc;
-  --radius:18px;--shadow:0 6px 20px rgba(0,0,0,.08);--tr:all .25s ease;
+  --radius:18px;--shadow:0 6px 20px rgba(0,0,0,.08);
 }
-body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Noto Sans KR",sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}
-.chat-container{width:440px;height:640px;background:var(--chat-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column}
-#chat-content{flex-grow:1;overflow-y:auto;scroll-behavior:smooth;color:var(--text);font-size:1rem}
-h3{font-weight:600;font-size:1.1rem;margin-bottom:14px;text-align:center}
-.button{background:var(--btn);color:var(--text);border:1px solid var(--bd);border-radius:var(--radius);padding:14px;margin:10px 0;font-size:1.05rem;cursor:pointer;width:100%;transition:var(--tr);box-sizing:border-box}
-.button:hover{background:var(--btn-h);transform:translateY(-1px)}
-.button:active{background:var(--btn-a);transform:scale(.98)}
-.bottom-bar{display:flex;justify-content:space-between;gap:10px;margin-top:10px}
-textarea{width:100%;border-radius:12px;padding:10px;border:1px solid #bbb;font-family:inherit;resize:none;font-size:.95rem;color:#000;background:#fafafa;box-sizing:border-box}
-.recommend-item{background:#f9f9f9;color:#000;border-radius:12px;padding:10px 14px;margin:6px 0;box-shadow:0 2px 6px rgba(0,0,0,.03);transition:var(--tr)}
-.recommend-item:hover{transform:translateY(-2px)}
-.emoji-container{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:10px;justify-items:center;align-items:center}
-.emoji{font-size:2.2rem;cursor:pointer;transition:transform .25s ease, filter .25s ease}
-@media (hover:hover){ .emoji:hover{transform:scale(1.1)} }
-.selected{transform:scale(1.25) !important;filter:drop-shadow(0 0 5px #555) !important}
-/* 🍏 애플 느낌 bounce 효과 */
+body {
+  background:var(--bg);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Noto Sans KR",sans-serif;
+  display:flex;justify-content:center;align-items:center;
+  height:100vh;margin:0;
+}
+.chat-container {
+  width:440px;height:640px;background:var(--chat-bg);
+  border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:22px;display:flex;flex-direction:column;
+}
+#chat-content {
+  flex-grow:1;overflow-y:auto;scroll-behavior:smooth;
+  color:var(--text);font-size:1rem;
+}
+.button {
+  background:var(--btn);color:var(--text);
+  border:1px solid var(--bd);border-radius:var(--radius);
+  padding:14px;margin:10px 0;font-size:1.05rem;cursor:pointer;
+  width:100%;transition:all .25s ease;
+}
+.button:hover { background:var(--btn-h);transform:translateY(-1px); }
+.button:active { background:var(--btn-a);transform:scale(.98); }
+.bottom-bar { display:flex;justify-content:space-between;gap:10px;margin-top:10px; }
+
+.emoji-container {
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:12px;margin-top:10px;justify-items:center;align-items:center;
+}
+.emoji {
+  font-size:2.2rem;cursor:pointer;
+  transition:transform .2s ease, filter .2s ease;
+}
+.selected {
+  transform:scale(1.25);
+  filter:drop-shadow(0 0 6px rgba(0,0,0,0.3));
+}
 @keyframes bounce {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.35); }
-  60% { transform: scale(0.95); }
-  80% { transform: scale(1.15); }
-  100% { transform: scale(1.2); }
+  0% {transform:scale(1);}
+  35% {transform:scale(1.35);}
+  70% {transform:scale(0.9);}
+  100% {transform:scale(1.25);}
 }
-.bounce { animation: bounce 0.4s cubic-bezier(.25,.46,.45,.94); }
+.bounce { animation:bounce .35s cubic-bezier(.25,.46,.45,.94); }
+
+textarea {
+  width:100%;border-radius:12px;padding:10px;
+  border:1px solid #bbb;resize:none;font-size:.95rem;
+  background:#fafafa;color:#000;
+}
+.review-card {
+  background:#f9f9f9;border-radius:12px;padding:10px;margin:8px 0;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
 </style>
 </head>
-
 <body>
 <div class="chat-container">
   <div id="chat-content"></div>
@@ -49,7 +78,8 @@ textarea{width:100%;border-radius:12px;padding:10px;border:1px solid #bbb;font-f
 
 <script>
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbypbNF4_cfeeRuscpeg6WcNMr1pM3S6Pz_XBoY6UCBOTKIRqSF_gqIau6RkkQpT-MCp/exec";
-if(!localStorage.getItem("sessionId")){localStorage.setItem("sessionId","sess-"+Math.random().toString(36).slice(2,11))}
+if(!localStorage.getItem("sessionId"))
+  localStorage.setItem("sessionId","sess-"+Math.random().toString(36).slice(2,11));
 const SESSION_ID=localStorage.getItem("sessionId");
 fetch(`${SCRIPT_URL}?action=visit&session=${SESSION_ID}`);
 
@@ -59,15 +89,11 @@ const data={
   "기출":["자이스토리","짱 어려운 유형 고난도 4점짜리 수학","너희들의 기출문제","마플 수능기출총정리","수능 기출의 바이블","실전+수능 고쟁이","어삼쉬사","너기출","수능 기출의 미래","쎈 기출","티오피 클래스 수능 기출문제집","이동훈 기출문제집","담금질","백미","기출의 고백","마더텅","올림포스 기출문제집"]
 };
 
-let satisfaction="";let selectedType="";let selectedLevel="";
-
-// 🎵 딸깍 사운드 초기화
-const clickSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-clickSound.volume = 0.3;
+let satisfaction="",selectedType="",selectedLevel="";
 
 function loadHome(){
-  const chat=document.getElementById("chat-content");
-  chat.innerHTML=`
+  const c=document.getElementById("chat-content");
+  c.innerHTML=`
     <div>
       <h3>어떤 문제집 추천이 필요하신가요?</h3>
       <button class="button" onclick="selectType('개념서')">개념서</button>
@@ -75,25 +101,23 @@ function loadHome(){
       <button class="button" onclick="selectType('기출')">기출</button>
     </div>`;
 }
-
-function selectType(type){
-  selectedType=type;
-  const chat=document.getElementById("chat-content");
-  if(type==="개념서"){
-    chat.innerHTML=`<h3>${type} 난이도를 선택하세요</h3>`+[1,2,3,4].map(i=>`<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
-  }else if(type==="유형 심화서"){
-    chat.innerHTML=`<h3>${type} 난이도를 선택하세요</h3>`+[1,2,3,4,5].map(i=>`<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
-  }else{ showRecommend(); }
+function selectType(t){
+  selectedType=t;
+  const c=document.getElementById("chat-content");
+  if(t==="개념서"){
+    c.innerHTML=`<h3>${t} 난이도를 선택하세요</h3>`+[1,2,3,4].map(i=>`<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
+  } else if(t==="유형 심화서"){
+    c.innerHTML=`<h3>${t} 난이도를 선택하세요</h3>`+[1,2,3,4,5].map(i=>`<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
+  } else showRecommend();
 }
-
-function showRecommend(level){
-  selectedLevel=level||"";
-  const chat=document.getElementById("chat-content");
+function showRecommend(lv){
+  selectedLevel=lv||"";
+  const c=document.getElementById("chat-content");
   const books=(selectedType==="기출")?data["기출"]:data[selectedType][selectedLevel];
-  chat.innerHTML=`
+  c.innerHTML=`
     <div>
       <h3>추천 문제집 목록</h3>
-      ${books.map(b=>`<div class="recommend-item">${b}</div>`).join('')}
+      ${books.map(b=>`<div class="review-card">${b}</div>`).join('')}
       <button class="button" onclick="openSatisfaction()">평가하기</button>
     </div>`;
 }
@@ -111,16 +135,13 @@ function openSatisfaction(){
         <span class="emoji" data-value="매우 만족">😍</span>
       </div>
     </div>`;
-
   document.querySelectorAll(".emoji").forEach(el=>{
     el.addEventListener("click",function(){
-      document.querySelectorAll(".emoji").forEach(e=>{e.classList.remove("selected","bounce");});
-      void this.offsetHeight; // reflow
+      document.querySelectorAll(".emoji").forEach(e=>{e.classList.remove("selected","bounce");e.style.transform="scale(1)";});
+      void this.offsetHeight;
       this.classList.add("selected","bounce");
-      satisfaction=this.getAttribute("data-value");
-      clickSound.currentTime = 0;
-      clickSound.play(); // 🔊 클릭할 때 사운드
-
+      satisfaction=this.dataset.value;
+      if(navigator.vibrate) navigator.vibrate(40); // 🔔 진동 효과
       if(!document.getElementById("reviewBox")){
         chat.innerHTML+=`
           <div id="reviewBox">
@@ -128,21 +149,49 @@ function openSatisfaction(){
             <button class="button" onclick="submitReview()">제출</button>
           </div>`;
       }
-      const c=document.getElementById("chat-content");
-      c.scrollTop=c.scrollHeight;
-    },{passive:true});
+      chat.scrollTop=chat.scrollHeight;
+    });
   });
-  const c=document.getElementById("chat-content");
-  c.scrollTop=c.scrollHeight;
+  chat.scrollTop=chat.scrollHeight;
 }
 
 async function submitReview(){
   const text=document.getElementById("reviewText").value.trim();
-  if(!text){alert("의견을 입력해주세요!");return;}
+  if(!text) return alert("의견을 입력해주세요!");
   await fetch(`${SCRIPT_URL}?action=review&type=${selectedType}&level=${selectedLevel}&review=${encodeURIComponent("["+satisfaction+"] "+text)}&session=${SESSION_ID}`);
   alert("평가가 제출되었습니다!");
   loadHome();
 }
+
+// 💖 관리자 모드: 하트 클릭 시 리뷰 보기
+document.getElementById("heartBtn").addEventListener("click",async()=>{
+  const res=await fetch(`${SCRIPT_URL}?action=read`);
+  const reviews=await res.json();
+  const c=document.getElementById("chat-content");
+  const total=reviews.length;
+  const avg=calcAverage(reviews.map(r=>r.review));
+  c.innerHTML=`<h3>📊 최근 평가 (${total}개, 평균 만족도: ${avg})</h3>`;
+  reviews.slice(-10).reverse().forEach(r=>{
+    c.innerHTML+=`
+      <div class="review-card">
+        <b>${r.type}</b> ${r.level?`${r.level}단계`:''}<br>
+        ${r.review}<br>
+        <small>${r.datetime}</small>
+      </div>`;
+  });
+  c.scrollTop=0;
+});
+
+function calcAverage(arr){
+  const map={불만족:1,"조금 불만족":2,보통:3,만족:4,"매우 만족":5};
+  const vals=arr.map(t=>{
+    const key=t.match(/\[(.*?)\]/);
+    return key&&map[key[1]]?map[key[1]]:null;
+  }).filter(Boolean);
+  if(!vals.length) return "데이터 없음";
+  return (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+}
+
 loadHome();
 </script>
 </body>
