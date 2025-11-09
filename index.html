@@ -1,36 +1,66 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>문제집 추천 알고리즘</title>
+
 <style>
 :root {
-  --bg-main: #FFFFFF;
-  --bg-box: #F4F4F4;
-  --btn-bg: #333333;
-  --btn-hover: #111111;
-  --text-main: #111111;
-  --text-light: #FFFFFF;
+  --bg-main: #000;
+  --bg-box: #111;
+  --btn-bg: #fff;
+  --btn-hover: #ddd;
+  --text-main: #fff;
+  --text-dark: #000;
   --radius: 14px;
 }
 
+/* 전체 페이지 */
 body {
   background-color: var(--bg-main);
   font-family: 'Noto Sans KR', sans-serif;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   height: 100vh;
   margin: 0;
+  padding-top: 100px;
 }
 
+/* 헤더 */
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background-color: #000;
+  color: var(--text-main);
+  text-align: center;
+  padding: 18px 10px;
+  border-bottom: 1px solid #333;
+  box-shadow: 0 2px 10px rgba(255,255,255,0.1);
+  z-index: 1000;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: 1px;
+}
+
+.header p {
+  margin: 3px 0 0;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+/* 챗봇 본체 */
 .chat-container {
   background-color: var(--bg-box);
   width: 420px;
   height: 600px;
   border-radius: 24px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 16px rgba(255,255,255,0.15);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -41,11 +71,12 @@ body {
   overflow-y: auto;
   scroll-behavior: smooth;
   font-size: 1rem;
+  color: var(--text-main);
 }
 
 .button {
   background-color: var(--btn-bg);
-  color: var(--text-light);
+  color: var(--text-dark);
   border: none;
   border-radius: var(--radius);
   padding: 10px 15px;
@@ -79,7 +110,7 @@ body {
 }
 
 .numpad-container {
-  background-color: var(--bg-box);
+  background-color: #222;
   padding: 20px;
   border-radius: 20px;
   display: flex;
@@ -106,79 +137,95 @@ body {
 
 .numpad-button {
   background-color: var(--btn-bg);
-  color: var(--text-light);
+  color: var(--text-dark);
   font-size: 1.2rem;
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
 }
-.numpad-button:active { opacity: 0.8; transform: scale(0.96); }
+
+.numpad-button:active {
+  transform: scale(0.96);
+}
 </style>
 </head>
 
 <body>
-  <div class="chat-container">
-    <div id="chat-content"></div>
+<div class="header">
+  <h1>📘 문제집 추천 알고리즘</h1>
+  <p>AI 기반 수학 문제집 가이드 시스템</p>
+</div>
 
-    <div class="bottom-bar">
-      <button class="button" id="backBtn">🔙 뒤로가기</button>
-      <button class="button" id="homeBtn">🏠 처음으로</button>
-      <button class="button" id="heartBtn">💖</button>
+<div class="chat-container">
+  <div id="chat-content"></div>
+  <div class="bottom-bar">
+    <button class="button" id="backBtn">🔙 뒤로가기</button>
+    <button class="button" id="homeBtn">🏠 처음으로</button>
+    <button class="button" id="heartBtn">💖</button>
+  </div>
+</div>
+
+<!-- 넘패드 -->
+<div id="numpad">
+  <div class="numpad-container">
+    <div id="numpad-display"></div>
+    <div class="numpad-grid">
+      <button class="numpad-button">1</button>
+      <button class="numpad-button">2</button>
+      <button class="numpad-button">3</button>
+      <button class="numpad-button">4</button>
+      <button class="numpad-button">5</button>
+      <button class="numpad-button">6</button>
+      <button class="numpad-button">7</button>
+      <button class="numpad-button">8</button>
+      <button class="numpad-button">9</button>
+      <button class="numpad-button">0</button>
+      <button class="numpad-button" id="clearBtn">Clear</button>
+      <button class="numpad-button" id="enterBtn">Enter</button>
     </div>
   </div>
+</div>
 
-  <!-- 넘패드 -->
-  <div id="numpad">
-    <div class="numpad-container">
-      <div id="numpad-display"></div>
-      <div class="numpad-grid">
-        <button class="numpad-button">1</button>
-        <button class="numpad-button">2</button>
-        <button class="numpad-button">3</button>
-        <button class="numpad-button">4</button>
-        <button class="numpad-button">5</button>
-        <button class="numpad-button">6</button>
-        <button class="numpad-button">7</button>
-        <button class="numpad-button">8</button>
-        <button class="numpad-button">9</button>
-        <button class="numpad-button">0</button>
-        <button class="numpad-button" id="clearBtn">Clear</button>
-        <button class="numpad-button" id="enterBtn">Enter</button>
-      </div>
-    </div>
-  </div>
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRfPXjxRCtKZB7Sg3xIUI7tznLIG-IqHAavDzn51IkQj_SQjTErIfGWzwIBxQvJ1Un/exec";
 
-  <!-- ✅ JS는 마지막에 실행 -->
-  <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrC2UrWD0QeYKU4q7bnst9Jo7y26E7Jpg2H7II2hSHHAaIcKtdkXdG0hJWwKBXS32b/exec";
-
-// 세션 ID (브라우저별 고유값)
 if (!localStorage.getItem("sessionId")) {
   localStorage.setItem("sessionId", "sess-" + Math.random().toString(36).substr(2, 9));
 }
 const SESSION_ID = localStorage.getItem("sessionId");
 
-// 방문자 기록
 fetch(`${SCRIPT_URL}?action=visit&session=${SESSION_ID}`);
 
 const data = {
-  "개념서": {1:["수학의 바이블","마플 교과서","수학의 왕도","올림포스 수학","개념 플러스 유형 고등 수학","이유있는 수학 개념 SOS","셀파 해법수학"],2:["수학의 샘","개념 쎈","풍산자","개념원리"],3:["기본 수학의 정석","수학중심 고등수학","메가스터디 문제 기본서 CPR수학","더 개념 블랙라벨"],4:["실력 수학의 정석","숨마쿰라우데"]},
-  "유형 심화서": {1:["수력충전","수학의 바이블 BOB","개념 플러스 유형 라이트","라이트 쎈","유형 해결의 법칙","올림포스 닥터링"],2:["개념원리 RPM","풍산자 필수유형","내공의 힘","올리드","하이라이트 단기 특강","심플 자이스토리"],3:["쎈 수학","마플 시너지","일등급 수학","1등급 만들기"],4:["일품","울림포스 고난도","수능다큐","절대등급","유형+내신 고쟁이","블랙라벨","내신 하이앤드","현우진 뉴런-시냅스","수학의 신"],5:["TOT","531 하이퍼","절대등급 코드엠","현우진 드릴"]},
+  "개념서": {
+    1: ["수학의 바이블","마플 교과서","수학의 왕도","올림포스 수학","개념 플러스 유형 고등 수학","이유있는 수학 개념 SOS","셀파 해법수학"],
+    2: ["수학의 샘","개념 쎈","풍산자","개념원리"],
+    3: ["기본 수학의 정석","수학중심 고등수학","메가스터디 문제 기본서 CPR수학","더 개념 블랙라벨"],
+    4: ["실력 수학의 정석","숨마쿰라우데"]
+  },
+  "유형 심화서": {
+    1: ["수력충전","수학의 바이블 BOB","개념 플러스 유형 라이트","라이트 쎈","유형 해결의 법칙","올림포스 닥터링"],
+    2: ["개념원리 RPM","풍산자 필수유형","내공의 힘","올리드","하이라이트 단기 특강","심플 자이스토리"],
+    3: ["쎈 수학","마플 시너지","일등급 수학","1등급 만들기"],
+    4: ["일품","울림포스 고난도","수능다큐","절대등급","유형+내신 고쟁이","블랙라벨","내신 하이앤드","현우진 뉴런-시냅스","수학의 신"],
+    5: ["TOT","531 하이퍼","절대등급 코드엠","현우진 드릴"]
+  },
   "기출": ["자이스토리","짱 어려운 유형 고난도 4점짜리 수학","너희들의 기출문제","마플 수능기출총정리","수능 기출의 바이블","실전+수능 고쟁이","어삼쉬사","너기출","수능 기출의 미래","쎈 기출","티오피 클래스 수능 기출문제집","이동훈 기출문제집","담금질","백미","기출의 고백","마더텅","올림포스 기출문제집"]
 };
 
 let currentPage = "home";
-let selectedType = "", selectedLevel = "", numpadCode = "";
+let selectedType = "";
+let selectedLevel = "";
+let numpadCode = "";
 
 function scrollTopReset() {
   document.getElementById("chat-content").scrollTop = 0;
 }
 
 function loadHome() {
-  currentPage = "home"; selectedType = ""; selectedLevel = "";
   const chat = document.getElementById("chat-content");
   chat.innerHTML = `
-    <div class="fade">
+    <div>
       <h3>어떤 문제집 추천이 필요하신가요?</h3>
       <button class="button" onclick="selectType('개념서')">개념서</button>
       <button class="button" onclick="selectType('유형 심화서')">유형 심화서</button>
@@ -191,12 +238,14 @@ function selectType(type) {
   selectedType = type;
   fetch(`${SCRIPT_URL}?action=select&type=${type}&session=${SESSION_ID}`);
   const chat = document.getElementById("chat-content");
-  if (type === "개념서")
+
+  if (type === "개념서") {
     chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` + [1,2,3,4].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
-  else if (type === "유형 심화서")
+  } else if (type === "유형 심화서") {
     chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` + [1,2,3,4,5].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
-  else showRecommend();
-  currentPage = "level";
+  } else {
+    showRecommend();
+  }
   scrollTopReset();
 }
 
@@ -206,23 +255,22 @@ function showRecommend(level) {
   const chat = document.getElementById("chat-content");
   const books = selectedType === "기출" ? data["기출"] : data[selectedType][selectedLevel];
   chat.innerHTML = `
-    <div class="fade">
+    <div>
       <h3>추천 문제집 목록</h3>
       <ul style="padding-left:15px;">
-        ${books.map(b => `<li style="margin:6px 0; background:#fff; border-radius:10px; padding:6px 10px;">${b}</li>`).join('')}
+        ${books.map(b => `<li style="margin:6px 0; background:#222; color:#fff; border-radius:10px; padding:6px 10px;">${b}</li>`).join('')}
       </ul>
       <button class="button" onclick="openReviewInput()">평가하기</button>
     </div>`;
-  currentPage = "result";
   scrollTopReset();
 }
 
 function openReviewInput() {
   const chat = document.getElementById("chat-content");
   chat.innerHTML += `
-    <div class="fade" id="reviewBox">
-      <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..." style="width:100%; box-sizing:border-box; border-radius:10px; padding:8px; border:1px solid #ccc; margin-top:8px; background:#fafafa;"></textarea>
-      <button class="button" style="width:100%;" onclick="submitReview()">제출</button>
+    <div id="reviewBox">
+      <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..." style="width:100%;border-radius:10px;padding:8px;margin-top:8px;border:1px solid #999;"></textarea>
+      <button class="button" onclick="submitReview()">제출</button>
     </div>`;
   scrollTopReset();
 }
@@ -235,44 +283,67 @@ async function submitReview() {
   loadHome();
 }
 
-// 💖 넘패드 비밀번호
+// 💖 넘패드 기능
 document.getElementById("heartBtn").addEventListener("click", () => {
   document.getElementById("numpad").style.display = "flex";
-  numpadCode = ""; document.getElementById("numpad-display").textContent = "";
+  numpadCode = "";
+  document.getElementById("numpad-display").textContent = "";
 });
 
 document.querySelectorAll(".numpad-button").forEach(btn => {
   btn.addEventListener("click", e => {
     const val = e.target.textContent;
-    if (val === "Clear") numpadCode = "", document.getElementById("numpad-display").textContent = "";
-    else if (val === "Enter") checkCode();
-    else numpadCode += val, document.getElementById("numpad-display").textContent = numpadCode;
+    if (val === "Clear") {
+      numpadCode = "";
+      document.getElementById("numpad-display").textContent = "";
+    } else if (val === "Enter") checkCode();
+    else {
+      numpadCode += val;
+      document.getElementById("numpad-display").textContent = numpadCode;
+    }
   });
 });
 
 function checkCode() {
-  if (numpadCode === "0411") loadReviews();
-  else alert("잘못된 코드입니다.");
-  document.getElementById("numpad").style.display = "none";
+  if (numpadCode === "0411") {
+    document.getElementById("numpad").style.display = "none";
+    loadReviews();
+  } else {
+    alert("잘못된 코드입니다.");
+    document.getElementById("numpad").style.display = "none";
+  }
 }
 
 async function loadReviews() {
-  const res = await fetch(`${SCRIPT_URL}?action=read`);
-  const reviews = await res.json();
   const chat = document.getElementById("chat-content");
-  chat.innerHTML = "<h3>다른 사용자들의 평가 (최신순)</h3>";
-  reviews.reverse().slice(0, 10).forEach(r => {
-    chat.innerHTML += `
-      <div style="margin:8px 0;background:#fff;padding:8px;border-radius:10px;">
-        <b>${r.type}</b> ${r.level ? `${r.level}단계` : ""}<br>
-        ${r.review}<br>
-        <small>${r.datetime}</small>
-      </div>`;
-  });
-  scrollTopReset();
+  chat.innerHTML = "<h3>📊 평가 불러오는 중...</h3>";
+
+  try {
+    const res = await fetch(`${SCRIPT_URL}?action=read`);
+    const reviews = await res.json();
+
+    if (!reviews.length) {
+      chat.innerHTML = "<p>아직 등록된 평가가 없습니다.</p>";
+      return;
+    }
+
+    chat.innerHTML = "<h3>📖 사용자 평가 목록</h3>";
+    reviews.reverse().forEach(r => {
+      chat.innerHTML += `
+        <div style="margin:10px 0; background:#222; color:#fff; padding:10px; border-radius:10px;">
+          <b>${r.type}</b> ${r.level ? `${r.level}단계` : ""}<br>
+          ${r.review}<br>
+          <small style="color:#bbb;">${r.datetime}</small>
+        </div>`;
+    });
+    scrollTopReset();
+  } catch (err) {
+    console.error("리뷰 로드 오류:", err);
+    chat.innerHTML = "<p>⚠️ 평가 데이터를 불러오는 중 오류가 발생했습니다.</p>";
+  }
 }
 
-// 버튼 기능
+// 뒤로가기 / 처음으로
 document.getElementById("homeBtn").addEventListener("click", loadHome);
 document.getElementById("backBtn").addEventListener("click", () => {
   if (currentPage === "level") loadHome();
@@ -280,8 +351,7 @@ document.getElementById("backBtn").addEventListener("click", () => {
   else loadHome();
 });
 
-// 첫 실행
 loadHome();
-  </script>
+</script>
 </body>
 </html>
