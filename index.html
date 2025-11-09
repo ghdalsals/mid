@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>문제집 추천 알고리즘</title>
 <style>
-:root { --bg:#f4f4f4; --chat-bg:#fff; --text:#1d1d1f; --btn:#e0e0e0; --btn-h:#d4d4d4; --btn-a:#c7c7c7; --bd:#ccc; --radius:18px; --shadow:0 6px 20px rgba(0,0,0,.08); }
+:root{--bg:#f4f4f4;--chat-bg:#fff;--text:#1d1d1f;--btn:#e0e0e0;--btn-h:#d4d4d4;--btn-a:#c7c7c7;--bd:#ccc;--radius:18px;--shadow:0 6px 20px rgba(0,0,0,.08)}
 body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Noto Sans KR",sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}
-.chat-container{width:440px;height:640px;background:var(--chat-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column}
+.chat-container{width:440px;height:640px;background:var(--chat-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;transition:opacity .6s ease}
+.fade-out{opacity:0;pointer-events:none}
 #chat-content{flex-grow:1;overflow-y:auto;scroll-behavior:smooth;color:var(--text);font-size:1rem}
 .button{background:var(--btn);color:var(--text);border:1px solid var(--bd);border-radius:var(--radius);padding:14px;margin:10px 0;font-size:1.05rem;cursor:pointer;width:100%;transition:all .25s ease}
 .button:hover{background:var(--btn-h);transform:translateY(-1px)}
@@ -15,12 +16,12 @@ body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro T
 .bottom-bar{display:flex;justify-content:space-between;gap:10px;margin-top:10px}
 .review-card{background:#f9f9f9;border-radius:12px;padding:10px;margin:8px 0;box-shadow:0 2px 6px rgba(0,0,0,.05)}
 
-.emoji-container{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:10px;justify-items:center;align-items:center}
-.emoji{font-size:2.2rem;cursor:pointer;transform:scale(1);will-change:transform;transition:transform .2s ease, filter .2s ease}
-@media (hover:hover){ .emoji:not(.selected):hover{transform:scale(1.1)} }
-.emoji.selected{transform:scale(1.25);filter:drop-shadow(0 0 6px rgba(0,0,0,.3))}
-@keyframes bounce{0%{transform:scale(1)}35%{transform:scale(1.35)}70%{transform:scale(0.92)}100%{transform:scale(1.25)}}
-.emoji.bounce{animation:bounce .32s cubic-bezier(.25,.46,.45,.94)}
+.rating-group{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:10px;justify-items:center;align-items:center}
+.rating-group input{position:absolute;opacity:0;width:0;height:0}
+.emoji-label{font-size:2.2rem;cursor:pointer;display:inline-block;transform:scale(1);transition:transform .2s ease, filter .2s ease}
+.rating-group input:checked + .emoji-label{transform:scale(1.25);filter:drop-shadow(0 0 6px rgba(0,0,0,.3))}
+@keyframes bounce{0%{transform:scale(1)}35%{transform:scale(1.35)}70%{transform:scale(0.9)}100%{transform:scale(1.25)}}
+.pulse{animation:bounce .32s cubic-bezier(.25,.46,.45,.94)}
 
 textarea{width:100%;border-radius:12px;padding:10px;border:1px solid #bbb;resize:none;font-size:.95rem;background:#fafafa;color:#000}
 
@@ -31,7 +32,7 @@ textarea{width:100%;border-radius:12px;padding:10px;border:1px solid #bbb;resize
 </style>
 </head>
 <body>
-<div class="chat-container">
+<div class="chat-container" id="chatBox">
   <div id="chat-content"></div>
   <div class="bottom-bar">
     <button class="button" id="backBtn">←</button>
@@ -63,11 +64,10 @@ const data={
 };
 
 let satisfaction="",selectedType="",selectedLevel="",currentPage="home";
-let selectedEmojiEl=null; // ✅ 현재 선택된 이모티콘 DOM 저장
 
 function loadHome(){
   currentPage="home";
-  selectedEmojiEl=null; satisfaction="";
+  satisfaction="";
   const c=document.getElementById("chat-content");
   c.innerHTML=`
     <div>
@@ -91,8 +91,7 @@ function selectType(t){
 }
 
 function showRecommend(lv){
-  currentPage="result"; selectedLevel=lv||"";
-  selectedEmojiEl=null; satisfaction="";
+  currentPage="result"; selectedLevel=lv||""; satisfaction="";
   const c=document.getElementById("chat-content");
   const books=(selectedType==="기출")?data["기출"]:data[selectedType][selectedLevel];
   c.innerHTML=`
@@ -101,84 +100,93 @@ function showRecommend(lv){
       ${books.map(b=>`<div class="review-card">${b}</div>`).join('')}
       <button class="button" id="evalBtn">평가하기</button>
     </div>`;
-  document.getElementById('evalBtn').onclick=openSatisfaction;
+  document.getElementById('evalBtn').onclick=openEvaluation;
 }
 
-function openSatisfaction(){
-  // ✅ 중복 생성 금지
-  if(document.getElementById("satisfactionBox")) return;
+function openEvaluation(){
+  // 이미 있으면 중복 생성하지 않고 스크롤만
+  if(document.getElementById("evalSection")){
+    document.getElementById("evalSection").scrollIntoView({behavior:'smooth',block:'start'});
+    return;
+  }
   const chat=document.getElementById("chat-content");
-  chat.innerHTML+=`
-    <div id="satisfactionBox">
+  chat.insertAdjacentHTML('beforeend', `
+    <div id="evalSection">
       <h3>이 추천에 얼마나 만족하시나요?</h3>
-      <div class="emoji-container" id="emojiBox">
-        <span class="emoji" data-value="불만족">😡</span>
-        <span class="emoji" data-value="조금 불만족">😕</span>
-        <span class="emoji" data-value="보통">😐</span>
-        <span class="emoji" data-value="만족">🙂</span>
-        <span class="emoji" data-value="매우 만족">😍</span>
+      <div class="rating-group" id="ratingGroup">
+        <input id="rate1" type="radio" name="satisfaction" value="불만족">
+        <label class="emoji-label" for="rate1" title="불만족">😡</label>
+
+        <input id="rate2" type="radio" name="satisfaction" value="조금 불만족">
+        <label class="emoji-label" for="rate2" title="조금 불만족">😕</label>
+
+        <input id="rate3" type="radio" name="satisfaction" value="보통">
+        <label class="emoji-label" for="rate3" title="보통">😐</label>
+
+        <input id="rate4" type="radio" name="satisfaction" value="만족">
+        <label class="emoji-label" for="rate4" title="만족">🙂</label>
+
+        <input id="rate5" type="radio" name="satisfaction" value="매우 만족">
+        <label class="emoji-label" for="rate5" title="매우 만족">😍</label>
       </div>
-    </div>`;
-  bindEmojiHandlers();
+
+      <div id="reviewBox" style="margin-top:10px;">
+        <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
+        <button class="button" onclick="submitReview()">제출</button>
+      </div>
+    </div>
+  `);
+
+  // 라디오 변경 시: 만족도 저장 + 애니메이션
+  const radios=[...document.querySelectorAll('input[name="satisfaction"]')];
+  const labels=[...document.querySelectorAll('.emoji-label')];
+
+  function pulseLabelById(id){
+    const lab=document.querySelector(`label[for="${id}"]`);
+    if(!lab) return;
+    lab.classList.remove('pulse'); // 재생 보장
+    void lab.offsetWidth;          // reflow
+    lab.classList.add('pulse');
+  }
+
+  radios.forEach(r=>{
+    r.addEventListener('change',e=>{
+      satisfaction=e.target.value;       // 현재 선택값
+      pulseLabelById(e.target.id);       // 언제나 bounce
+    });
+  });
+
+  // 같은 아이콘을 다시 눌러도 bounce가 보이도록 라벨 클릭에도 처리
+  labels.forEach(l=>{
+    l.addEventListener('click',()=>{
+      const id=l.getAttribute('for');
+      const r=document.getElementById(id);
+      // 이미 체크되어 있더라도 시각 피드백은 항상 실행
+      setTimeout(()=>pulseLabelById(id),0);
+    });
+  });
+
   chat.scrollTop=chat.scrollHeight;
 }
 
-function bindEmojiHandlers(){
-  const box=document.getElementById('emojiBox');
-  // 이벤트 위임으로 견고하게
-  box.addEventListener('click',(e)=>{
-    const el=e.target.closest('.emoji');
-    if(!el) return;
-
-    // ✅ 이전 선택 복원
-    if(selectedEmojiEl && selectedEmojiEl!==el){
-      selectedEmojiEl.classList.remove('selected','bounce');
-      selectedEmojiEl.style.transform='scale(1)';
-      selectedEmojiEl.style.filter='';
-    }
-
-    // ✅ 현재 선택 지정
-    selectedEmojiEl=el;
-    satisfaction=el.dataset.value;
-
-    // ✅ 매 클릭마다 bounce 확실히 재생 (Chrome 포함)
-    el.classList.remove('bounce');
-    el.classList.add('selected');
-    // 두 단계 reflow + RAF로 애니메이션 재시작 보장
-    void el.offsetWidth;
-    requestAnimationFrame(()=>{ el.classList.add('bounce'); });
-
-    // 의견 입력 박스 1회만 생성
-    if(!document.getElementById("reviewBox")){
-      const chat=document.getElementById("chat-content");
-      chat.innerHTML+=`
-        <div id="reviewBox">
-          <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
-          <button class="button" onclick="submitReview()">제출</button>
-        </div>`;
-      const c=document.getElementById("chat-content");
-      c.scrollTop=c.scrollHeight;
-    }
-  }, {passive:true});
-}
-
 async function submitReview(){
-  const text=document.getElementById("reviewText")?.value.trim()||"";
+  const text=(document.getElementById("reviewText")?.value||"").trim();
   if(!satisfaction) return alert("만족도를 먼저 선택해주세요!");
   if(!text) return alert("의견을 입력해주세요!");
   await fetch(`${SCRIPT_URL}?action=review&type=${selectedType}&level=${selectedLevel}&review=${encodeURIComponent("["+satisfaction+"] "+text)}&session=${SESSION_ID}`);
-  alert("평가가 제출되었습니다!");
-  loadHome();
+  // fade-out → 홈 복귀
+  const box=document.getElementById('chatBox');
+  box.classList.add('fade-out');
+  setTimeout(()=>{ box.classList.remove('fade-out'); loadHome(); },600);
 }
 
 /* 하트 → 비밀번호 모달 */
 document.getElementById("heartBtn").onclick=()=>showPasswordModal();
-function showPasswordModal(){ document.getElementById("passwordModal").style.display="flex"; }
-function closePasswordModal(){ document.getElementById("passwordModal").style.display="none"; }
+function showPasswordModal(){document.getElementById("passwordModal").style.display="flex";}
+function closePasswordModal(){document.getElementById("passwordModal").style.display="none";}
 function checkPassword(){
   const pw=document.getElementById("adminPass").value.trim();
-  if(pw==="0411"){ closePasswordModal(); loadReviews(); }
-  else alert("잘못된 비밀번호입니다.");
+  if(pw==="0411"){closePasswordModal();loadReviews();}else alert("잘못된 비밀번호입니다.");
 }
 async function loadReviews(){
   const res=await fetch(`${SCRIPT_URL}?action=read`);
@@ -188,26 +196,20 @@ async function loadReviews(){
   const avg=calcAverage(reviews.map(r=>r.review));
   c.innerHTML=`<h3>📊 최근 평가 (${total}개, 평균: ${avg})</h3>`;
   reviews.slice(-10).reverse().forEach(r=>{
-    c.innerHTML+=`
-      <div class="review-card">
-        <b>${r.type}</b> ${r.level?`${r.level}단계`:''}<br>
-        ${r.review}<br>
-        <small>${r.datetime}</small>
-      </div>`;
+    c.innerHTML+=`<div class="review-card"><b>${r.type}</b> ${r.level?`${r.level}단계`:''}<br>${r.review}<br><small>${r.datetime}</small></div>`;
   });
   c.scrollTop=0;
 }
 function calcAverage(arr){
   const map={불만족:1,"조금 불만족":2,보통:3,만족:4,"매우 만족":5};
-  const vals=arr.map(t=>{ const m=t.match(/\[(.*?)\]/); return m&&map[m[1]]?map[m[1]]:null; }).filter(Boolean);
+  const vals=arr.map(t=>{const m=t.match(/\[(.*?)\]/);return m&&map[m[1]]?map[m[1]]:null;}).filter(Boolean);
   return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):"데이터 없음";
 }
 
 /* 되돌아가기 / 처음으로 */
 document.getElementById("homeBtn").onclick=()=>loadHome();
 document.getElementById("backBtn").onclick=()=>{
-  // 기출은 난이도 단계가 없으므로 홈으로
-  if(selectedType==="기출"){ loadHome(); return; }
+  if(selectedType==="기출"){loadHome();return;}
   if(currentPage==="result") selectType(selectedType);
   else loadHome();
 };
