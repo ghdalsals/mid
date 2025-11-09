@@ -28,7 +28,7 @@ body{
 h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .p{margin:0; color:var(--muted); font-size:16.5px}
 
-/* 텍스트 버튼(상단 선택용) */
+/* 공용 버튼 */
 .button{
   display:block; width:100%; border:1px solid var(--line); background:var(--elev); color:var(--fg);
   border-radius:14px; padding:14px 16px; font-size:17px; font-weight:600; letter-spacing:-.01em; margin:10px 0;
@@ -38,26 +38,20 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .button:active{ transform:translateY(0); filter:brightness(.98) }
 .button.cta{ background:var(--cta); color:#fff; border-color:var(--cta) }
 
-/* 하단 아이콘 버튼바 */
-.bottom{ display:flex; gap:14px; padding: var(--space); border-top:1px solid var(--line); justify-content:center }
-.iconbtn{
-  width:56px; height:56px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  background:var(--elev); border:1px solid var(--line); color:var(--fg);
-  font-size:22px; cursor:pointer;
-  transition:transform var(--speed) var(--ease), filter var(--speed) var(--ease), background var(--speed) var(--ease)
-}
-.iconbtn:hover{ transform:translateY(-1px); filter:brightness(1.02) }
-.iconbtn:active{ transform:translateY(0); filter:brightness(.98) }
+/* 하단바 */
+.bottom{ display:flex; gap:10px; padding: var(--space); border-top:1px solid var(--line) }
+.bottom .button{ margin:0; flex:1; min-width:0; text-align:center }
 
-/* 클릭 가능한 추천 카드 */
+/* 추천 카드: 클릭 피드백 + 단일 선택 강조 */
 .card{
   background:var(--elev); border:1px solid var(--line); border-radius:14px;
   padding:12px 14px; font-size:16px; margin:8px 0; cursor:pointer;
-  transition:transform .2s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease)
+  transition: background .35s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease)
 }
 .card:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.06) }
 .card:active{ transform:scale(.99) }
+.card.clicked{ background:#e0e0e3; }     /* 짧은 클릭 피드백 */
+.card.selected{ background:#d7d7db; }    /* 현재 선택 유지(더 진한 회색) */
 
 /* 만족도 라디오 */
 .rating{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:12px; justify-items:center; align-items:center }
@@ -68,17 +62,27 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 @keyframes bounce{0%{transform:scale(1)}35%{transform:scale(1.34)}70%{transform:scale(0.92)}100%{transform:scale(1.24)}}
 .pulse{ animation:bounce .32s var(--ease) }
 
-/* 텍스트 영역 */
+/* textarea */
 textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#fff; border-radius:12px;
   padding:12px; font-size:16px; line-height:1.5; resize:none; color:var(--fg) }
 
 /* 비밀번호 모달 */
 .modal{ position:fixed; inset:0; display:none; background:rgba(0,0,0,.4); align-items:center; justify-content:center; padding:16px }
-.modal-box{ width:min(380px,94vw); background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px }
+.modal-box{ width:min(420px,94vw); background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px }
 .modal h4{ margin:0 0 12px 0; font-size:18px; text-align:center; font-weight:600 }
 .input{ width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:16px; text-align:center }
 .modal-row{ display:flex; gap:10px; margin-top:12px }
 .modal-row .button{ margin:0; flex:1 }
+
+/* 홈 배너 */
+.banner{
+  background:#f5f5f7; border:1px solid var(--line); color:var(--fg);
+  border-radius:12px; padding:10px 12px; margin-bottom:12px; position:relative;
+}
+.banner .close{
+  position:absolute; right:10px; top:8px; border:none; background:transparent;
+  font-size:18px; cursor:pointer; color:var(--muted);
+}
 </style>
 </head>
 <body>
@@ -86,11 +90,10 @@ textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#
     <div class="header"><h1 class="title">문제집 추천 알고리즘</h1></div>
     <div id="chat-content"></div>
 
-    <!-- 아이콘만 있는 하단바 -->
     <div class="bottom" role="group" aria-label="하단 도구">
-      <button class="iconbtn" id="backBtn"  aria-label="되돌아가기" title="되돌아가기">←</button>
-      <button class="iconbtn" id="homeBtn"  aria-label="처음으로"   title="처음으로">⌂</button>
-      <button class="iconbtn" id="heartBtn" aria-label="관리자"     title="관리자">💖</button>
+      <button class="button" id="backBtn"  aria-label="되돌아가기" title="되돌아가기">←</button>
+      <button class="button" id="homeBtn"  aria-label="처음으로"   title="처음으로">⌂</button>
+      <button class="button" id="heartBtn" aria-label="관리자"     title="관리자">💖</button>
     </div>
   </div>
 
@@ -108,7 +111,7 @@ textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#
 
 <script>
 /* ===== 설정 ===== */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4olBRgz5gDV09jR1L3hmpTy1s04Hqlw5elF2uQmw5_H95x0LUjBKhGEiJhe0iQKrW/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZR-TvpidGXhYob4xq__WzfKOVZlroRt5Alf0SnRPswZ2d2zKh0SglgyyxP-0XXzWk/exec";
 /* 평문 대신 SHA-256 해시만 코드에 저장 (비번 0411 해시) */
 const ADMIN_PW_SHA256 = "d20bdc364b3d7dfdcd81be5a3fd192d0f513fa79e92463bf0ed9efd2f46c243b";
 
@@ -116,6 +119,15 @@ const ADMIN_PW_SHA256 = "d20bdc364b3d7dfdcd81be5a3fd192d0f513fa79e92463bf0ed9efd
 if(!localStorage.getItem("sessionId")) localStorage.setItem("sessionId","sess-"+Math.random().toString(36).slice(2,11));
 const SESSION_ID = localStorage.getItem("sessionId");
 fetch(`${SCRIPT_URL}?action=visit&session=${encodeURIComponent(SESSION_ID)}`).catch(()=>{});
+
+/* ===== Haptics (Android만) ===== */
+const canVibrate = typeof navigator !== "undefined" && typeof navigator.vibrate === "function";
+const haptic = {
+  light(){ if (canVibrate) navigator.vibrate(8); },
+  medium(){ if (canVibrate) navigator.vibrate([12]); },
+  success(){ if (canVibrate) navigator.vibrate([10,40,10]); },
+  error(){ if (canVibrate) navigator.vibrate([20,50,20]); }
+};
 
 /* ===== 데이터 ===== */
 const data = {
@@ -137,23 +149,46 @@ const data = {
 
 /* ===== 상태 & 유틸 ===== */
 let satisfaction = "", selectedType = "", selectedLevel = "", currentPage = "home";
+let lastClickedBook = "", lastSubmittedBook = "", lastSubmittedAt = "";
 const $ = id => document.getElementById(id);
 const chat = () => $("chat-content");
 const scrollTop = () => { chat().scrollTop=0; };
 const scrollBottom = () => { chat().scrollTop=chat().scrollHeight; };
 
-/* ===== 화면 ===== */
-function viewHome(){
+/* 최근 제출 정보 로컬 저장/복원 (관리자에서 표시) */
+function saveLastSubmission(){
+  if(!lastClickedBook) return;
+  lastSubmittedBook = lastClickedBook;
+  lastSubmittedAt = new Date().toISOString();
+  localStorage.setItem("lastSubmittedBook", lastSubmittedBook);
+  localStorage.setItem("lastSubmittedAt", lastSubmittedAt);
+}
+function getLastSubmission(){
+  return {
+    book: localStorage.getItem("lastSubmittedBook") || "(선택 없음)",
+    at: localStorage.getItem("lastSubmittedAt") || ""
+  };
+}
+
+/* ===== 홈 렌더링(배너 지원) ===== */
+function viewHome(msg){
   currentPage="home"; satisfaction="";
   chat().innerHTML = `
     <div>
+      ${msg ? `
+        <div class="banner" role="status">
+          ${msg}
+          <button class="close" aria-label="닫기" onclick="this.parentElement.remove()">×</button>
+        </div>` : ``}
       <p class="p" style="text-align:center;margin-bottom:14px">원하는 유형을 선택하세요</p>
       <button class="button" onclick="viewType('개념서')">개념서</button>
       <button class="button" onclick="viewType('유형 심화서')">유형 심화서</button>
       <button class="button" onclick="viewType('기출')">기출</button>
     </div>`;
   scrollTop();
+  if(msg){ setTimeout(()=>{ const b=document.querySelector('.banner'); if(b) b.remove(); }, 5000); }
 }
+
 function viewType(t){
   currentPage="type"; selectedType=t;
   fetch(`${SCRIPT_URL}?action=select&type=${encodeURIComponent(t)}&session=${encodeURIComponent(SESSION_ID)}`).catch(()=>{});
@@ -164,6 +199,7 @@ function viewType(t){
   }else{ viewResult(); }
   scrollTop();
 }
+
 function viewResult(lv){
   currentPage="result"; selectedLevel=lv||""; satisfaction="";
   if(selectedType!=="기출"){
@@ -180,19 +216,27 @@ function viewResult(lv){
   const listEl = document.getElementById("bookList");
   listEl.innerHTML = books.map((b,i)=>`<div class="card" data-book="${b}" tabindex="0" role="button" aria-label="${b}">${i+1}. ${b}</div>`).join('');
 
-  // 카드 클릭/엔터 시 클릭 로그
+  // 단일 선택 유지 + 클릭 로그
+  const clearSelected = () => listEl.querySelectorAll(".card.selected").forEach(n=>n.classList.remove("selected"));
   listEl.querySelectorAll(".card").forEach(el=>{
     const book = el.getAttribute("data-book");
     const logClick = ()=>{
+      haptic.light();
+      lastClickedBook = book;
+
+      // 짧은 클릭 피드백 + 단일 선택 유지
+      el.classList.add("clicked");
+      setTimeout(()=>{ el.classList.remove("clicked"); }, 420);
+      clearSelected();
+      el.classList.add("selected");
+
       fetch(`${SCRIPT_URL}?action=book&type=${encodeURIComponent(selectedType)}&level=${encodeURIComponent(selectedLevel)}&book=${encodeURIComponent(book)}&session=${encodeURIComponent(SESSION_ID)}`).catch(()=>{});
-      el.style.background = "#eee";
-      setTimeout(()=>{ el.style.background = ""; }, 250);
     };
     el.addEventListener("click", logClick);
     el.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); logClick(); }});
   });
 
-  $("evalBtn").onclick = openEvaluation;
+  $("evalBtn").onclick = ()=>{ haptic.medium(); openEvaluation(); };
   scrollTop();
 }
 
@@ -211,69 +255,114 @@ function openEvaluation(){
       </div>
       <div style="margin-top:12px">
         <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
-        <button class="button cta" style="margin-top:10px" onclick="submitReview()">제출</button>
+        <button class="button cta" style="margin-top:10px" id="submitBtn">제출</button>
       </div>
     </div>
   `);
+
+  // 이모티콘 선택
   const radios=[...document.querySelectorAll('input[name="s"]')];
   const pulse=id=>{ const l=document.querySelector(`label[for="${id}"]`); l.classList.remove('pulse'); void l.offsetWidth; l.classList.add('pulse'); };
-  radios.forEach(r=>{ r.addEventListener('change',e=>{ satisfaction=e.target.value; pulse(e.target.id); }); });
+  radios.forEach(r=>{ r.addEventListener('change',e=>{ satisfaction=e.target.value; haptic.light(); pulse(e.target.id); }); });
   document.querySelectorAll('.emoji').forEach(l=>{ l.addEventListener('click',()=>{ const id=l.getAttribute('for'); setTimeout(()=>pulse(id),0); }); });
+
+  // Enter 제출 (Shift+Enter는 줄바꿈)
+  const ta = $("reviewText");
+  const submitBtn = $("submitBtn");
+  const onSubmit = ()=>submitReview();
+  submitBtn.addEventListener("click", onSubmit);
+  ta.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter" && !e.shiftKey){
+      e.preventDefault();
+      onSubmit();
+    }
+  });
+
   scrollBottom();
 }
 
 async function submitReview(){
   const text = ($("reviewText")?.value||"").trim();
-  if(!satisfaction) return alert("만족도를 먼저 선택해주세요!");
-  if(!text) return alert("의견을 입력해주세요!");
+  if(!satisfaction){ haptic.error(); return alert("만족도를 먼저 선택해주세요!"); }
+  if(!text){ haptic.error(); return alert("의견을 입력해주세요!"); }
   try{
     await fetch(`${SCRIPT_URL}?action=review&type=${encodeURIComponent(selectedType)}&level=${encodeURIComponent(selectedLevel)}&review=${encodeURIComponent("["+satisfaction+"] "+text)}&session=${encodeURIComponent(SESSION_ID)}`);
-  }catch(e){}
-  const box=$("chatBox"); box.classList.add('fade-out');
-  setTimeout(()=>{ box.classList.remove('fade-out'); viewHome(); },600);
+    saveLastSubmission(); // 최근 제출 당시 선택한 문제집 저장
+    haptic.success();
+    const box=$("chatBox"); box.classList.add('fade-out');
+    setTimeout(()=>{
+      box.classList.remove('fade-out');
+      viewHome("✅ 평가가 제출되었습니다. 감사합니다! 🙏");
+    },600);
+  }catch(e){
+    haptic.error();
+    alert("네트워크 오류가 발생했습니다.");
+  }
 }
 
-/* ===== 하단 아이콘 버튼 동작 ===== */
-$("homeBtn").onclick = ()=>viewHome();
+/* ===== 하단 버튼 ===== */
+$("homeBtn").onclick = ()=>{ haptic.medium(); viewHome(); };
 $("backBtn").onclick = ()=>{
+  haptic.light();
   if(selectedType==="기출"){ viewHome(); return; }
   if(currentPage==="result"){ viewType(selectedType); }
   else{ viewHome(); }
 };
 
-/* ===== 하트 → 비밀번호(클라이언트 해시 비교) ===== */
+/* ===== 하트 → 비밀번호(클라이언트 해시 비교) + 최근 제출 정보 노출 ===== */
 const modal = $("passwordModal"), pass = $("adminPass");
-$("heartBtn").onclick = ()=>{ modal.style.display="flex"; pass.value=""; pass.focus(); };
-$("pwCancelBtn").onclick = ()=>{ modal.style.display="none"; };
-$("pwConfirmBtn").onclick = checkPassword;
-pass.addEventListener('keydown',e=>{ if(e.key==="Enter"){ e.preventDefault(); checkPassword(); } });
+$("heartBtn").onclick = ()=>{
+  haptic.medium();
+  modal.style.display="flex"; pass.value=""; pass.focus();
+};
+$("pwCancelBtn").onclick = ()=>{ haptic.light(); modal.style.display="none"; };
+$("pwConfirmBtn").onclick = ()=>{ haptic.medium(); checkPassword(); };
+pass.addEventListener('keydown',e=>{
+  if(e.key==="Enter"){ e.preventDefault(); haptic.medium(); checkPassword(); }
+});
 function buf2hex(buf){ return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
 async function checkPassword(){
   const raw = pass.value; if(!raw){ alert("비밀번호를 입력하세요."); return; }
   const enc = new TextEncoder().encode(raw);
   const digest = await crypto.subtle.digest("SHA-256", enc);
   const hex = buf2hex(digest);
-  if(hex === ADMIN_PW_SHA256){ modal.style.display="none"; loadAdmin(); }
-  else alert("잘못된 비밀번호입니다.");
+  if(hex === ADMIN_PW_SHA256){
+    modal.style.display="none";
+    loadAdmin();
+  }else{
+    alert("잘못된 비밀번호입니다.");
+  }
 }
 
-/* ===== 관리자: 방문/고유/클릭 통계 + 최근 리뷰 ===== */
+/* ===== 관리자: 총 방문 / 일일 방문 / 고유 사용자 + 최근 제출 정보 ===== */
 async function loadAdmin(){
   try{
     const stats = await fetch(`${SCRIPT_URL}?action=stats`).then(r=>r.json());
     const reviews = await fetch(`${SCRIPT_URL}?action=read`).then(r=>r.json());
-    renderAdmin(stats, reviews);
-  }catch(e){ alert("관리자 데이터를 불러오지 못했습니다."); }
+    const last = getLastSubmission();
+    renderAdmin(stats, reviews, last);
+  }catch(e){
+    alert("관리자 데이터를 불러오지 못했습니다.");
+  }
 }
-function renderAdmin(stats, reviews){
+function renderAdmin(stats, reviews, last){
+  const todayVisits = (typeof stats?.todayVisits !== "undefined") ? Number(stats.todayVisits).toLocaleString() : "-";
   chat().innerHTML = `
     <div>
       <h3>관리자 대시보드</h3>
+
+      <div class="card" style="margin-bottom:10px">
+        <b>최근 제출 당시 선택한 문제집</b><br/>
+        <div class="p" style="margin-top:6px">${last.book}</div>
+        ${last.at ? `<small class="p">${new Date(last.at).toLocaleString()}</small>` : ``}
+      </div>
+
       <div class="card" style="display:flex;gap:12px;justify-content:space-between;align-items:center">
         <div><b>총 방문</b><br><span class="p">${Number(stats?.visits||0).toLocaleString()}</span></div>
+        <div><b>일일 방문</b><br><span class="p">${todayVisits}</span></div>
         <div><b>고유 사용자</b><br><span class="p">${Number(stats?.uniqueSessions||0).toLocaleString()}</span></div>
-        <div><b>문제집 클릭</b><br><span class="p">${Number(stats?.clicks||0).toLocaleString()}</span></div>
       </div>
+
       <div style="margin-top:8px">
         ${reviews.slice(-12).reverse().map(r=>`
           <div class="card">
