@@ -9,9 +9,14 @@
 html,body{height:100%;margin:0;overflow-x:hidden;-webkit-text-size-adjust:100%}
 :root{
   --bg:#ffffff; --fg:#1d1d1f; --muted:#6e6e73; --line:#d2d2d7; --elev:#f5f5f7;
-  --cta:#1d1d1f; --radius:20px; --space:22px; --shadow:0 14px 40px rgba(0,0,0,.08);
-  --ease:cubic-bezier(.25,.46,.45,.94); --speed:.28s;
+  --radius:20px; --space:22px; --shadow:0 14px 40px rgba(0,0,0,.08);
+  --ease: cubic-bezier(.25,.46,.45,.94);
+  --speed:.28s;
+  --card-anim: 220ms;   /* 카드 전환 통일 */
+  --page-anim: 260ms;   /* 화면(step) 전환 통일 (iOS 슬라이드) */
 }
+
+/* 레이아웃 */
 body{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Noto Sans KR",system-ui,Segoe UI,Roboto,sans-serif;
   color:var(--fg); background:var(--bg);
@@ -19,18 +24,12 @@ body{
   padding: clamp(18px, 4vw, 36px);
 }
 
-/* ✅ 실제 스마트폰 비율: 기본 9:19.5, 모바일에선 svh로 꽉 채움 */
+/* ✅ 실제 스마트폰 비율: 기본 9:19.5, 데스크톱 캡, 모바일 svh 꽉 채움 */
 .chat{
-  /* 가로폭: 휴대폰 폭에 맞게, 데스크탑에서도 너무 넓지 않게 */
   width: clamp(360px, 92vw, 430px);
-
-  /* 아이폰 비율(9:19.5) 미리보기 */
   aspect-ratio: 9 / 19.5;
   height: auto;
-
-  /* 브라우저 UI(주소창 등) 제외한 안전 높이 */
-  max-height: calc(100svh - 24px);
-
+  max-height: min(820px, calc(100svh - 24px));
   background:#fff; border:1px solid var(--line);
   border-radius:var(--radius); box-shadow:var(--shadow);
   display:flex; flex-direction:column; overflow:hidden; transition:opacity .6s var(--ease)
@@ -39,20 +38,22 @@ body{
   body{ padding:12px; }
   .chat{
     width: 100%;
-    height: calc(100svh - 24px); /* 주소창 포함 안전 높이 */
-    aspect-ratio: auto;          /* 비율 고정 해제 */
+    height: calc(100svh - 24px);
+    aspect-ratio: auto;
     border-radius: 18px;
   }
 }
+@media (min-width: 900px){
+  .chat{ aspect-ratio: 10 / 17; } /* 데스크톱 길쭉함 완화 */
+}
 
-.fade-out{opacity:0;pointer-events:none}
 .header{ padding: calc(var(--space) - 4px) var(--space) var(--space); border-bottom:1px solid var(--line) }
 .title{ margin:0; font-size:22px; font-weight:600; letter-spacing:-.02em; text-align:center }
 #chat-content{ flex:1; padding: var(--space); overflow-y:auto; overflow-x:hidden; scroll-behavior:smooth }
 h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .p{margin:0; color:var(--muted); font-size:16.5px}
 
-/* 공용 버튼 */
+/* 버튼 */
 .button{
   display:block; width:100%; border:1px solid var(--line); background:var(--elev); color:var(--fg);
   border-radius:14px; padding:14px 16px; font-size:17px; font-weight:600; letter-spacing:-.01em; margin:10px 0;
@@ -61,20 +62,20 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .button:hover{ transform:translateY(-1px); filter:brightness(1.02) }
 .button:active{ transform:translateY(0); filter:brightness(.98) }
 
-/* ⬇⬇ 평가하기/제출 회색 톤(조금 더 진하게) */
+/* CTA(평가하기/제출) — 요청: 카드보다 진하게 */
 .button.cta{
-  background:#d9d9de;      /* 기본 */
+  background:#c7c7ce;    /* 살짝 더 진한 회색 */
   color:#1d1d1f;
-  border-color:#c7c7cc;
+  border-color:#bdbdc4;
 }
 .button.cta:hover{
   transform:translateY(-1px);
-  background:#e5e5ea;      /* hover */
+  background:#d2d2d9;
   filter:none;
 }
 .button.cta:active{
   transform:translateY(0);
-  background:#cfcfd6;      /* active */
+  background:#bfbfc7;
   filter:none;
 }
 
@@ -82,16 +83,20 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .bottom{ display:flex; gap:10px; padding: var(--space); border-top:1px solid var(--line) }
 .bottom .button{ margin:0; flex:1; min-width:0; text-align:center }
 
-/* 추천 카드: 클릭 피드백 + 단일 선택 강조 + 토글 */
+/* 추천 카드: 클릭/선택 색 더 연하게 + 전환 속도 통일 */
 .card{
   background:var(--elev); border:1px solid var(--line); border-radius:14px;
   padding:12px 14px; font-size:16px; margin:8px 0; cursor:pointer;
-  transition: background .35s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease)
+  transition:
+    background-color var(--card-anim) var(--ease),
+    transform        var(--card-anim) var(--ease),
+    box-shadow       var(--card-anim) var(--ease),
+    opacity          var(--card-anim) var(--ease);
 }
 .card:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.06) }
 .card:active{ transform:scale(.99) }
-.card.clicked{ background:#e0e0e3; }     /* 짧은 클릭 피드백 */
-.card.selected{ background:#d7d7db; }    /* 현재 선택 유지(더 진한 회색) */
+.card.clicked{  background:#f0f0f3; }  /* 짧은 클릭 피드백(연함) */
+.card.selected{ background:#e9e9ee; }  /* 단일 선택 유지(연함) */
 
 /* 만족도 라디오 */
 .rating{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:12px; justify-items:center; align-items:center }
@@ -114,23 +119,37 @@ textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#
 .modal-row{ display:flex; gap:10px; margin-top:12px }
 .modal-row .button{ margin:0; flex:1 }
 
-/* 홈 배너(지금은 미사용이지만 유지) */
-.banner{
-  background:#f5f5f7; border:1px solid var(--line); color:var(--fg);
-  border-radius:12px; padding:10px 12px; margin-bottom:12px; position:relative;
-}
-.banner .close{
-  position:absolute; right:10px; top:8px; border:none; background:transparent;
-  font-size:18px; cursor:pointer; color:var(--muted);
-}
-
-/* 제출 즉시 보여줄 미니 토스트 */
+/* 토스트 */
 .toast{
   margin-top:10px; text-align:center; font-weight:600;
   background:#f5f5f7; border:1px solid var(--line); border-radius:10px; padding:10px;
   animation: fadein .2s var(--ease);
 }
 @keyframes fadein{ from{opacity:0} to{opacity:1} }
+
+/* =========================
+   iOS 스타일 '슬라이드' 전환
+   ========================= */
+.view{ will-change: transform, opacity; }
+
+/* 새 화면 진입 */
+.slide-enter{ transform: translateX(12%); opacity:0; }
+.slide-enter-active{
+  transform: translateX(0); opacity:1;
+  transition: transform var(--page-anim) var(--ease), opacity var(--page-anim) var(--ease);
+}
+
+/* 이전 화면 이탈 */
+.slide-leave{ transform: translateX(0); opacity:1; }
+.slide-leave-active{
+  transform: translateX(-8%); opacity:0;
+  transition: transform var(--page-anim) var(--ease), opacity var(--page-anim) var(--ease);
+}
+
+/* 접근성: 모션 최소화 */
+@media (prefers-reduced-motion: reduce){
+  .slide-enter, .slide-leave{ transform:none !important; }
+}
 </style>
 </head>
 <body>
@@ -198,10 +217,35 @@ const data = {
 /* ===== 상태 & 유틸 ===== */
 let satisfaction = "", selectedType = "", selectedLevel = "", currentPage = "home";
 let lastClickedBook = "", lastSubmittedBook = "", lastSubmittedAt = "";
+const CLICK_MS = 220; // 카드 클릭/해제 피드백 시간(CSS와 일치)
+
 const $ = id => document.getElementById(id);
 const chat = () => $("chat-content");
 const scrollTop = () => { chat().scrollTop=0; };
 const scrollBottom = () => { chat().scrollTop=chat().scrollHeight; };
+
+/* 화면 전환: iOS 슬라이드 (통일) */
+function swapView(html, klass='slide'){
+  const c = chat();
+  const old = document.createElement('div');
+  old.className = `view ${klass}-leave`;
+  old.innerHTML = c.innerHTML;
+
+  const neu = document.createElement('div');
+  neu.className = `view ${klass}-enter`;
+  neu.innerHTML = html;
+
+  c.innerHTML = '';
+  c.appendChild(old);
+  c.appendChild(neu);
+
+  requestAnimationFrame(()=>{
+    old.classList.add(`${klass}-leave-active`);
+    neu.classList.add(`${klass}-enter-active`);
+  });
+
+  setTimeout(()=>{ c.innerHTML = ''; c.appendChild(neu); neu.className = 'view'; }, 280);
+}
 
 /* 최근 제출 정보 로컬 저장/복원 (관리자에서 표시) */
 function saveLastSubmission(){
@@ -218,10 +262,10 @@ function getLastSubmission(){
   };
 }
 
-/* ===== 홈 렌더링 ===== */
+/* ===== 홈 ===== */
 function viewHome(msg){
   currentPage="home"; satisfaction="";
-  chat().innerHTML = `
+  const html = `
     <div>
       ${msg ? `
         <div class="banner" role="status">
@@ -233,22 +277,26 @@ function viewHome(msg){
       <button class="button" onclick="viewType('유형 심화서')">유형 심화서</button>
       <button class="button" onclick="viewType('기출')">기출</button>
     </div>`;
-  scrollTop();
+  swapView(html, 'slide');  // iOS 슬라이드 전환
 }
 
-/* 유형/난이도 */
+/* ===== 유형 선택 → 난이도 ===== */
 function viewType(t){
   currentPage="type"; selectedType=t;
   fetch(`${SCRIPT_URL}?action=select&type=${encodeURIComponent(t)}&session=${encodeURIComponent(SESSION_ID)}`).catch(()=>{});
+  let html = '';
   if(t==="개념서"){
-    chat().innerHTML = `<h3>${t} 난이도를 선택하세요</h3>` + [1,2,3,4].map(i=>`<button class="button" onclick="viewResult(${i})">${i}단계</button>`).join('');
+    html = `<h3>${t} 난이도를 선택하세요</h3>` + [1,2,3,4].map(i=>`<button class="button" onclick="viewResult(${i})">${i}단계</button>`).join('');
   }else if(t==="유형 심화서"){
-    chat().innerHTML = `<h3>${t} 난이도를 선택하세요</h3>` + [1,2,3,4,5].map(i=>`<button class="button" onclick="viewResult(${i})">${i}단계</button>`).join('');
-  }else{ viewResult(); }
-  scrollTop();
+    html = `<h3>${t} 난이도를 선택하세요</h3>` + [1,2,3,4,5].map(i=>`<button class="button" onclick="viewResult(${i})">${i}단계</button>`).join('');
+  }else{
+    // 기출은 난이도 없이 결과로
+    return viewResult();
+  }
+  swapView(`<div>${html}</div>`, 'slide');
 }
 
-/* 결과(책 리스트 + 토글 선택) */
+/* ===== 결과(책 리스트 + 토글 선택) ===== */
 function viewResult(lv){
   currentPage="result"; selectedLevel=lv||""; satisfaction="";
   if(selectedType!=="기출"){
@@ -256,31 +304,33 @@ function viewResult(lv){
   }
   const books = (selectedType==="기출")? data["기출"] : data[selectedType][selectedLevel];
 
-  chat().innerHTML = `
+  const html = `
     <div>
       <h3>추천 문제집</h3>
       <div id="bookList"></div>
       <button class="button cta" id="evalBtn">평가하기</button>
     </div>`;
+  swapView(html, 'slide');
+
+  // 렌더 후 바인딩
   const listEl = document.getElementById("bookList");
   listEl.innerHTML = books.map((b,i)=>`<div class="card" data-book="${b}" tabindex="0" role="button" aria-label="${b}">${i+1}. ${b}</div>`).join('');
 
-  // 단일 선택 유지 + 토글 + (선택 시에만 book 로그)
   const clearSelected = () => listEl.querySelectorAll(".card.selected").forEach(n=>n.classList.remove("selected"));
   listEl.querySelectorAll(".card").forEach(el=>{
     const book = el.getAttribute("data-book");
     const handleToggle = ()=>{
       haptic.light();
-      // 클릭 피드백
+
+      // 공통 클릭 피드백(선택/해제 동일 타이밍)
       el.classList.add("clicked");
-      setTimeout(()=>{ el.classList.remove("clicked"); }, 420);
+      setTimeout(()=>{ el.classList.remove("clicked"); }, CLICK_MS);
 
       if(el.classList.contains("selected")){
-        // ⛔ 선택 해제 (로그 전송 없음)
+        // 해제 (로그 전송 없음)
         el.classList.remove("selected");
         if(lastClickedBook === book) lastClickedBook = "";
       }else{
-        // ✅ 선택
         clearSelected();
         el.classList.add("selected");
         lastClickedBook = book;
@@ -292,15 +342,12 @@ function viewResult(lv){
   });
 
   document.getElementById("evalBtn").onclick = ()=>{ haptic.medium(); openEvaluation(); };
-  scrollTop();
 }
 
 /* ===== 평가 ===== */
 function openEvaluation(){
-  if(document.getElementById("evalSection")){
-    document.getElementById("evalSection").scrollIntoView({behavior:'smooth',block:'start'}); return;
-  }
-  chat().insertAdjacentHTML('beforeend', `
+  // 평가 화면은 인라인 추가 대신, 슬라이드 전환으로 통일감 유지
+  const block = `
     <div id="evalSection" style="margin-top:14px">
       <h3>만족도 선택</h3>
       <div class="rating" id="ratingGroup">
@@ -316,7 +363,39 @@ function openEvaluation(){
         <div id="thanksToast" class="toast" style="display:none;">✅ 평가가 제출되었습니다. 감사합니다! 🙏</div>
       </div>
     </div>
-  `);
+  `;
+
+  // 현재 결과 화면의 상단도 포함해서 하나의 뷰로 구성
+  const header = `<h3>추천 문제집</h3>`;
+  let items = '';
+  const books = (selectedType==="기출")? data["기출"] : data[selectedType][selectedLevel];
+  items = books.map((b,i)=>`<div class="card ${lastClickedBook===b?'selected':''}" data-book="${b}" tabindex="0" role="button" aria-label="${b}">${i+1}. ${b}</div>`).join('');
+  const html = `<div>${header}<div id="bookList">${items}</div><button class="button cta" disabled>평가하기</button>${block}</div>`;
+  swapView(html, 'slide');
+
+  // 책 토글(평가 화면에서도 유지)
+  const listEl = document.getElementById("bookList");
+  const clearSelected = () => listEl.querySelectorAll(".card.selected").forEach(n=>n.classList.remove("selected"));
+  listEl.querySelectorAll(".card").forEach(el=>{
+    const book = el.getAttribute("data-book");
+    const handleToggle = ()=>{
+      haptic.light();
+      el.classList.add("clicked");
+      setTimeout(()=>{ el.classList.remove("clicked"); }, CLICK_MS);
+
+      if(el.classList.contains("selected")){
+        el.classList.remove("selected");
+        if(lastClickedBook === book) lastClickedBook = "";
+      }else{
+        clearSelected();
+        el.classList.add("selected");
+        lastClickedBook = book;
+        fetch(`${SCRIPT_URL}?action=book&type=${encodeURIComponent(selectedType)}&level=${encodeURIComponent(selectedLevel)}&book=${encodeURIComponent(book)}&session=${encodeURIComponent(SESSION_ID)}`).catch(()=>{});
+      }
+    };
+    el.addEventListener("click", handleToggle);
+    el.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); handleToggle(); }});
+  });
 
   // 이모티콘 선택
   const radios=[...document.querySelectorAll('input[name="s"]')];
@@ -324,7 +403,7 @@ function openEvaluation(){
   radios.forEach(r=>{ r.addEventListener('change',e=>{ satisfaction=e.target.value; haptic.light(); pulse(e.target.id); }); });
   document.querySelectorAll('.emoji').forEach(l=>{ l.addEventListener('click',()=>{ const id=l.getAttribute('for'); setTimeout(()=>pulse(id),0); }); });
 
-  // Enter 제출 (Shift+Enter 줄바꿈)
+  // 제출 핸들러
   const ta = document.getElementById("reviewText");
   const submitBtn = document.getElementById("submitBtn");
   const onSubmit = ()=>submitReview();
@@ -336,7 +415,10 @@ function openEvaluation(){
     }
   });
 
-  scrollBottom();
+  // 평가 섹션이 보이도록 하단으로 스크롤
+  requestAnimationFrame(()=>{
+    scrollBottom();
+  });
 }
 
 async function submitReview(){
@@ -344,9 +426,14 @@ async function submitReview(){
   if(!satisfaction){ haptic.error(); return alert("만족도를 먼저 선택해주세요!"); }
   if(!text){ haptic.error(); return alert("의견을 입력해주세요!"); }
 
-  // ✅ 즉시 “감사합니다” 토스트 표시 (전송 대기감 숨기기)
+  // ✅ 즉시 “감사합니다” 토스트 표시 + 하단 스크롤 고정
   const toast = document.getElementById("thanksToast");
   toast.style.display = "block";
+  requestAnimationFrame(()=>{
+    const c = chat();
+    c.scrollTop = c.scrollHeight;
+    setTimeout(()=>{ c.scrollTop = c.scrollHeight; }, 50);
+  });
 
   // 버튼/입력 비활성화
   const submitBtn = document.getElementById("submitBtn");
@@ -357,16 +444,15 @@ async function submitReview(){
 
   try{
     await fetch(`${SCRIPT_URL}?action=review&type=${encodeURIComponent(selectedType)}&level=${encodeURIComponent(selectedLevel)}&review=${encodeURIComponent("["+satisfaction+"] "+text)}&session=${encodeURIComponent(SESSION_ID)}`);
-    saveLastSubmission(); // 최근 제출 당시 선택한 문제집 저장
+    saveLastSubmission();
     haptic.success();
 
-    // 전송 완료되면 바로 홈으로 이동 (홈에는 배너 없음)
+    // 전송 완료 후 곧바로 홈으로 (홈 배너 없음)
     const box=document.getElementById("chatBox"); box.classList.add('fade-out');
     setTimeout(()=>{ box.classList.remove('fade-out'); viewHome(); }, 450);
   }catch(e){
     haptic.error();
     alert("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
-    // 실패 시 원복
     toast.style.display = "none";
     submitBtn.disabled = false;
     submitBtn.textContent = "제출";
@@ -378,12 +464,19 @@ async function submitReview(){
 document.getElementById("homeBtn").onclick = ()=>{ haptic.medium(); viewHome(); };
 document.getElementById("backBtn").onclick = ()=>{
   haptic.light();
-  if(selectedType==="기출"){ viewHome(); return; }
-  if(currentPage==="result"){ viewType(selectedType); }
-  else{ viewHome(); }
+  if(selectedType==="기출"){
+    // 기출은 홈으로
+    viewHome();
+  }else if(currentPage==="result"){
+    // 결과 → 난이도 선택
+    viewType(selectedType);
+  }else{
+    // 그 외 → 홈
+    viewHome();
+  }
 };
 
-/* ===== 하트 → 비밀번호(클라이언트 해시 비교) + 최근 제출 정보 노출 ===== */
+/* ===== 하트 → 비밀번호(클라이언트 해시 비교) + 관리자 ===== */
 const modal = document.getElementById("passwordModal"), pass = document.getElementById("adminPass");
 document.getElementById("heartBtn").onclick = ()=>{
   haptic.medium();
@@ -394,6 +487,7 @@ document.getElementById("pwConfirmBtn").onclick = ()=>{ haptic.medium(); checkPa
 pass.addEventListener('keydown',e=>{
   if(e.key==="Enter"){ e.preventDefault(); haptic.medium(); checkPassword(); }
 });
+
 function buf2hex(buf){ return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
 async function checkPassword(){
   const raw = pass.value; if(!raw){ alert("비밀번호를 입력하세요."); return; }
@@ -408,47 +502,44 @@ async function checkPassword(){
   }
 }
 
-/* ===== 관리자: 총 방문 / 일일 방문 / 고유 사용자 + 최근 제출 정보 ===== */
+/* ===== 관리자: 방문/고유/일일 + 최근 제출 문제집 ===== */
 async function loadAdmin(){
   try{
     const stats = await fetch(`${SCRIPT_URL}?action=stats`).then(r=>r.json());
     const reviews = await fetch(`${SCRIPT_URL}?action=read`).then(r=>r.json());
     const last = getLastSubmission();
-    renderAdmin(stats, reviews, last);
+
+    const todayVisits = (typeof stats?.todayVisits !== "undefined") ? Number(stats.todayVisits).toLocaleString() : "-";
+    const html = `
+      <div>
+        <h3>관리자 대시보드</h3>
+        <div class="card" style="margin-bottom:10px">
+          <b>최근 제출 당시 선택한 문제집</b><br/>
+          <div class="p" style="margin-top:6px">${last.book}</div>
+          ${last.at ? `<small class="p">${new Date(last.at).toLocaleString()}</small>` : ``}
+        </div>
+
+        <div class="card" style="display:flex;gap:12px;justify-content:space-between;align-items:center">
+          <div><b>총 방문</b><br><span class="p">${Number(stats?.visits||0).toLocaleString()}</span></div>
+          <div><b>일일 방문</b><br><span class="p">${todayVisits}</span></div>
+          <div><b>고유 사용자</b><br><span class="p">${Number(stats?.uniqueSessions||0).toLocaleString()}</span></div>
+        </div>
+
+        <div style="margin-top:8px">
+          ${reviews.slice(-12).reverse().map(r=>`
+            <div class="card">
+              <b>${r.type||''}</b> ${r.level?`${r.level}단계`:''}<br/>
+              ${r.review||''}<br/>
+              <small class="p">${r.datetime||''}${r.session?` · 세션:${r.session}`:''}</small>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    swapView(html, 'slide');
   }catch(e){
     alert("관리자 데이터를 불러오지 못했습니다.");
   }
-}
-function renderAdmin(stats, reviews, last){
-  const todayVisits = (typeof stats?.todayVisits !== "undefined") ? Number(stats.todayVisits).toLocaleString() : "-";
-  chat().innerHTML = `
-    <div>
-      <h3>관리자 대시보드</h3>
-
-      <div class="card" style="margin-bottom:10px">
-        <b>최근 제출 당시 선택한 문제집</b><br/>
-        <div class="p" style="margin-top:6px">${last.book}</div>
-        ${last.at ? `<small class="p">${new Date(last.at).toLocaleString()}</small>` : ``}
-      </div>
-
-      <div class="card" style="display:flex;gap:12px;justify-content:space-between;align-items:center">
-        <div><b>총 방문</b><br><span class="p">${Number(stats?.visits||0).toLocaleString()}</span></div>
-        <div><b>일일 방문</b><br><span class="p">${todayVisits}</span></div>
-        <div><b>고유 사용자</b><br><span class="p">${Number(stats?.uniqueSessions||0).toLocaleString()}</span></div>
-      </div>
-
-      <div style="margin-top:8px">
-        ${reviews.slice(-12).reverse().map(r=>`
-          <div class="card">
-            <b>${r.type||''}</b> ${r.level?`${r.level}단계`:''}<br/>
-            ${r.review||''}<br/>
-            <small class="p">${r.datetime||''}${r.session?` · 세션:${r.session}`:''}</small>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-  scrollTop();
 }
 
 /* 부트 */
