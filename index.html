@@ -10,10 +10,11 @@ html,body{height:100%;margin:0;overflow-x:hidden;-webkit-text-size-adjust:100%}
 :root{
   --bg:#ffffff; --fg:#1d1d1f; --muted:#6e6e73; --line:#d2d2d7; --elev:#f5f5f7;
   --radius:20px; --space:22px; --shadow:0 14px 40px rgba(0,0,0,.08);
-  --ease: cubic-bezier(.25,.46,.45,.94);
-  --speed:.28s;
-  --card-anim: 220ms;   /* 카드 전환 통일 */
-  --page-anim: 220ms;   /* 화면(step) 전환 통일 (페이드) */
+  --speed:.2s; --ease:cubic-bezier(.25,.46,.45,.94);
+  --card-anim: 200ms;
+  --cta:#899656;           /* ✅ 요구 색상 */
+  --cta-hover:#7d8a4e;     /* 살짝 어둡게 */
+  --cta-active:#6f7b45;    /* 더 어둡게 */
 }
 
 /* 레이아웃 */
@@ -32,7 +33,7 @@ body{
   max-height: min(820px, calc(100svh - 24px));
   background:#fff; border:1px solid var(--line);
   border-radius:var(--radius); box-shadow:var(--shadow);
-  display:flex; flex-direction:column; overflow:hidden; transition:opacity .6s var(--ease)
+  display:flex; flex-direction:column; overflow:hidden;
 }
 @media (max-width: 600px){
   body{ padding:12px; }
@@ -53,37 +54,29 @@ body{
 h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .p{margin:0; color:var(--muted); font-size:16.5px}
 
-/* 버튼 */
+/* 버튼(기본) */
 .button{
   display:block; width:100%; border:1px solid var(--line); background:var(--elev); color:var(--fg);
   border-radius:14px; padding:14px 16px; font-size:17px; font-weight:600; letter-spacing:-.01em; margin:10px 0;
-  transition:transform var(--speed) var(--ease), filter var(--speed) var(--ease), background var(--speed) var(--ease); cursor:pointer
+  cursor:pointer; transition:transform var(--speed) var(--ease), filter var(--speed) var(--ease), background var(--speed) var(--ease)
 }
 .button:hover{ transform:translateY(-1px); filter:brightness(1.02) }
 .button:active{ transform:translateY(0); filter:brightness(.98) }
 
-/* CTA(평가하기/제출) — 카드보다 살짝 더 진함 */
+/* ✅ CTA(평가하기/제출) — #899656 배경 + 흰색 글자 */
 .button.cta{
-  background:#c7c7ce;
-  color:#1d1d1f;
-  border-color:#bdbdc4;
+  background:var(--cta);
+  color:#fff;
+  border-color:#7a8650;
 }
-.button.cta:hover{
-  transform:translateY(-1px);
-  background:#d2d2d9;
-  filter:none;
-}
-.button.cta:active{
-  transform:translateY(0);
-  background:#bfbfc7;
-  filter:none;
-}
+.button.cta:hover{ background:var(--cta-hover); transform:translateY(-1px) }
+.button.cta:active{ background:var(--cta-active); transform:translateY(0) }
 
 /* 하단바 */
 .bottom{ display:flex; gap:10px; padding: var(--space); border-top:1px solid var(--line) }
 .bottom .button{ margin:0; flex:1; min-width:0; text-align:center }
 
-/* 추천 카드: 클릭/선택 색 더 연하게 + 전환 속도 통일 */
+/* 추천 카드: 클릭/선택 색 연하게 + 전환 속도 통일 */
 .card{
   background:var(--elev); border:1px solid var(--line); border-radius:14px;
   padding:12px 14px; font-size:16px; margin:8px 0; cursor:pointer;
@@ -102,10 +95,10 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .rating{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:12px; justify-items:center; align-items:center }
 .rating input{ position:absolute; opacity:0; width:0; height:0 }
 .emoji{ font-size:2.2rem; line-height:1; display:inline-block; cursor:pointer; transform:scale(1);
-  transition:transform .2s var(--ease), filter .2s var(--ease) }
+  transition:transform .18s var(--ease), filter .18s var(--ease) }
 .rating input:checked + .emoji{ transform:scale(1.24); filter:drop-shadow(0 0 6px rgba(0,0,0,.25)) }
 @keyframes bounce{0%{transform:scale(1)}35%{transform:scale(1.34)}70%{transform:scale(0.92)}100%{transform:scale(1.24)}}
-.pulse{ animation:bounce .32s var(--ease) }
+.pulse{ animation:bounce .28s var(--ease) }
 
 /* textarea */
 textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#fff; border-radius:12px;
@@ -123,28 +116,6 @@ textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#
 .toast{
   margin-top:10px; text-align:center; font-weight:600;
   background:#f5f5f7; border:1px solid var(--line); border-radius:10px; padding:10px;
-  animation: fadein .2s var(--ease);
-}
-@keyframes fadein{ from{opacity:0} to{opacity:1} }
-
-/* =========================
-   페이드 전환 (통일)
-   ========================= */
-.view{ will-change: opacity; }
-.fade-enter{ opacity:0; }
-.fade-enter-active{
-  opacity:1;
-  transition: opacity var(--page-anim) var(--ease);
-}
-.fade-leave{ opacity:1; }
-.fade-leave-active{
-  opacity:0;
-  transition: opacity var(--page-anim) var(--ease);
-}
-
-/* 접근성: 모션 최소화 */
-@media (prefers-reduced-motion: reduce){
-  .fade-enter, .fade-leave{ opacity:1 !important; }
 }
 </style>
 </head>
@@ -213,40 +184,16 @@ const data = {
 /* ===== 상태 & 유틸 ===== */
 let satisfaction = "", selectedType = "", selectedLevel = "", currentPage = "home";
 let lastClickedBook = "", lastSubmittedBook = "", lastSubmittedAt = "";
-const CLICK_MS = 220; // 카드 클릭/해제 피드백 시간(CSS와 일치)
+const CLICK_MS = 200;
 
 const $ = id => document.getElementById(id);
 const chat = () => $("chat-content");
 
-/* 화면 전환: 페이드 (통일) + 전환 완료 후 항상 맨 위 유지 */
-function swapView(html, klass='fade'){
+/* ✅ 애니메이션 없는 렌더 헬퍼: 전환 시 항상 맨 위로 */
+function render(html){
   const c = chat();
-  const old = document.createElement('div');
-  old.className = `view ${klass}-leave`;
-  old.innerHTML = c.innerHTML;
-
-  const neu = document.createElement('div');
-  neu.className = `view ${klass}-enter`;
-  neu.innerHTML = html;
-
-  c.innerHTML = '';
-  c.appendChild(old);
-  c.appendChild(neu);
-
-  // 전환 시작 전에 스크롤을 꼭 맨 위로 초기화(다음 화면이 아래로 밀려 보이는 문제 방지)
+  c.innerHTML = html;
   c.scrollTop = 0;
-
-  requestAnimationFrame(()=>{
-    old.classList.add(`${klass}-leave-active`);
-    neu.classList.add(`${klass}-enter-active`);
-  });
-
-  setTimeout(()=>{
-    c.innerHTML = '';
-    c.appendChild(neu);
-    neu.className = 'view';
-    c.scrollTop = 0; // 전환 완료 후에도 한 번 더 보정
-  }, 240);
 }
 
 /* 최근 제출 정보 로컬 저장/복원 (관리자에서 표시) */
@@ -270,16 +217,14 @@ function viewHome(msg){
   const html = `
     <div>
       ${msg ? `
-        <div class="banner" role="status">
-          ${msg}
-          <button class="close" aria-label="닫기" onclick="this.parentElement.remove()">×</button>
-        </div>` : ``}
+        <div class="toast" role="status">${msg}</div>
+      ` : ``}
       <p class="p" style="text-align:center;margin-bottom:14px">원하는 유형을 선택하세요</p>
       <button class="button" onclick="viewType('개념서')">개념서</button>
       <button class="button" onclick="viewType('유형 심화서')">유형 심화서</button>
       <button class="button" onclick="viewType('기출')">기출</button>
     </div>`;
-  swapView(html, 'fade');
+  render(html);
 }
 
 /* ===== 유형 선택 → 난이도 ===== */
@@ -294,7 +239,7 @@ function viewType(t){
   }else{
     return viewResult();
   }
-  swapView(`<div>${html}</div>`, 'fade');
+  render(`<div>${html}</div>`);
 }
 
 /* ===== 결과(책 리스트 + 토글 선택) ===== */
@@ -311,7 +256,7 @@ function viewResult(lv){
       <div id="bookList"></div>
       <button class="button cta" id="evalBtn">평가하기</button>
     </div>`;
-  swapView(html, 'fade');
+  render(html);
 
   const listEl = document.getElementById("bookList");
   listEl.innerHTML = books.map((b,i)=>`<div class="card" data-book="${b}" tabindex="0" role="button" aria-label="${b}">${i+1}. ${b}</div>`).join('');
@@ -341,7 +286,7 @@ function viewResult(lv){
   document.getElementById("evalBtn").onclick = ()=>{ haptic.medium(); openEvaluation(); };
 }
 
-/* ===== 평가 (별도 화면, 전환 페이드) ===== */
+/* ===== 평가 ===== */
 function openEvaluation(){
   const books = (selectedType==="기출")? data["기출"] : data[selectedType][selectedLevel];
   const items = books.map((b,i)=>`<div class="card ${lastClickedBook===b?'selected':''}" data-book="${b}" tabindex="0" role="button" aria-label="${b}">${i+1}. ${b}</div>`).join('');
@@ -367,7 +312,7 @@ function openEvaluation(){
       </div>
     </div>
   `;
-  swapView(html, 'fade');
+  render(html);
 
   // 책 토글(평가 화면에서도 유지)
   const listEl = document.getElementById("bookList");
@@ -393,7 +338,7 @@ function openEvaluation(){
     el.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); handleToggle(); }});
   });
 
-  // 이모티콘 선택
+  // 만족도 선택
   const radios=[...document.querySelectorAll('input[name="s"]')];
   const pulse=id=>{ const l=document.querySelector(`label[for="${id}"]`); l.classList.remove('pulse'); void l.offsetWidth; l.classList.add('pulse'); };
   radios.forEach(r=>{ r.addEventListener('change',e=>{ satisfaction=e.target.value; haptic.light(); pulse(e.target.id); }); });
@@ -438,9 +383,8 @@ async function submitReview(){
     saveLastSubmission();
     haptic.success();
 
-    // 전송 완료 후 곧바로 홈으로 (홈 배너 없음)
-    const box=document.getElementById("chatBox"); box.classList.add('fade-out');
-    setTimeout(()=>{ box.classList.remove('fade-out'); viewHome(); }, 450);
+    // 완료 후 바로 홈 이동(홈에는 메시지 없음)
+    viewHome();
   }catch(e){
     haptic.error();
     alert("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
@@ -524,7 +468,7 @@ async function loadAdmin(){
         </div>
       </div>
     `;
-    swapView(html, 'fade');
+    render(html);
   }catch(e){
     alert("관리자 데이터를 불러오지 못했습니다.");
   }
