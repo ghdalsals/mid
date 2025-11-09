@@ -8,29 +8,29 @@
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow-x:hidden;-webkit-text-size-adjust:100%}
 :root{
+  --outer:#dbdfcc;        /* 바깥 배경 */
   --bg:#ffffff; --fg:#1d1d1f; --muted:#3c3c3e; --line:#b6bca4;
   --radius:20px; --space:22px; --shadow:0 14px 40px rgba(0,0,0,.08);
   --speed:.18s; --ease:cubic-bezier(.25,.46,.45,.94);
-  --card-anim: 160ms;
+  --card-anim:160ms;
 
-  /* ✅ 요청 색 */
-  --box:#cfd5bb;          /* 유형/난이도/미선택 카드 + 하단 버튼 */
+  /* 박스/CTA/선택 색 */
+  --box:#cfd5bb;          /* 유형/난이도/미선택 카드 + 일부 버튼(기본) */
   --box-border:#b8c2a2;
-
-  /* ✅ CTA 색 */
-  --cta:#899656;
+  --cta:#899656;          /* 평가하기/제출 */
   --cta-hover:#7d8a4e;
   --cta-active:#6f7b45;
-
-  /* ✅ 선택된 카드 색 */
-  --selected:#a0ab77;
+  --selected:#a0ab77;     /* 선택된 카드 */
   --selected-border:#8f9b63;
+
+  /* 하단 버튼 전용 */
+  --bottom:#7b874d;
+  --bottom-border:#6c7944;
 }
 
-/* 레이아웃 */
 body{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Noto Sans KR",system-ui,Segoe UI,Roboto,sans-serif;
-  color:var(--fg); background:var(--bg);
+  color:var(--fg); background:var(--outer);
   display:flex;align-items:center;justify-content:center;
   padding: clamp(18px, 4vw, 36px);
 }
@@ -60,36 +60,47 @@ body{
 
 .header{ padding: calc(var(--space) - 4px) var(--space) var(--space); border-bottom:1px solid #ededf0 }
 .title{ margin:0; font-size:22px; font-weight:600; letter-spacing:-.02em; text-align:center }
-#chat-content{ flex:1; padding: var(--space); overflow-y:auto; overflow-x:hidden; }
+
+/* 스크롤 컨테이너 + 부드러운 스크롤 */
+#chat-content{
+  flex:1; padding: var(--space); overflow-y:auto; overflow-x:hidden;
+  scroll-behavior: smooth;
+}
+
 h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .p{margin:0; color:var(--muted); font-size:16.5px}
 
-/* 버튼(기본) → ✅ box 색 적용 */
+/* 버튼(기본) → 박스색 + 흰색 글자 */
 .button{
-  display:block; width:100%; border:1px solid var(--box-border); background:var(--box); color:#1a1a1a;
+  display:block; width:100%; border:1px solid var(--box-border); background:var(--box); color:#fff;
   border-radius:14px; padding:14px 16px; font-size:17px; font-weight:600; letter-spacing:-.01em; margin:10px 0;
   cursor:pointer; transition:transform var(--speed) var(--ease), filter var(--speed) var(--ease)
 }
 .button:hover{ transform:translateY(-1px); filter:brightness(1.02) }
 .button:active{ transform:translateY(0); filter:brightness(.98) }
 
-/* ✅ CTA(평가하기/제출) — #899656 배경 + 흰색 글자 (유일하게 box색과 다름) */
+/* CTA(평가하기/제출) — #899656 + 흰색 */
 .button.cta{
-  background:var(--cta);
-  color:#fff;
-  border-color:#7a8650;
+  background:var(--cta); color:#fff; border-color:#7a8650;
 }
 .button.cta:hover{ background:var(--cta-hover); transform:translateY(-1px) }
 .button.cta:active{ background:var(--cta-active); transform:translateY(0) }
 
-/* 하단바 → 기본 버튼이 box색이므로 그대로 */
+/* 하단바 + 하단 버튼 전용 색 */
 .bottom{ display:flex; gap:10px; padding: var(--space); border-top:1px solid #ededf0 }
-.bottom .button{ margin:0; flex:1; min-width:0; text-align:center }
+.bottom .button{
+  margin:0; flex:1; min-width:0; text-align:center;
+  background: var(--bottom);
+  color:#fff;
+  border:1px solid var(--bottom-border);
+}
+.bottom .button:hover{ transform:translateY(-1px); filter:brightness(1.03); }
+.bottom .button:active{ transform:translateY(0); filter:brightness(.97); }
 
-/* 추천 카드 → 기본 박스색(#cfd5bb) */
+/* 추천 카드 → 박스색 + 흰색 글자 */
 .card{
   background:var(--box); border:1px solid var(--box-border); border-radius:14px;
-  padding:12px 14px; font-size:16px; margin:8px 0; cursor:pointer;
+  padding:12px 14px; font-size:16px; margin:8px 0; cursor:pointer; color:#fff;
   transition:
     background-color var(--card-anim) var(--ease),
     transform        var(--card-anim) var(--ease),
@@ -97,13 +108,12 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
     opacity          var(--card-anim) var(--ease),
     color            var(--card-anim) var(--ease),
     border-color     var(--card-anim) var(--ease);
-  color:#111;
 }
 .card:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.06) }
 .card:active{ transform:scale(.99) }
-/* 짧은 클릭 피드백은 밝기만 살짝 */
+/* 짧은 클릭 피드백 */
 .card.clicked{ filter:brightness(.97); }
-/* ✅ 선택 상태 */
+/* 선택 상태 → 선택색 + 흰색 */
 .card.selected{
   background:var(--selected);
   border-color:var(--selected-border);
@@ -123,13 +133,28 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 textarea{ width:100%; max-width:100%; border:1px solid #dcdcdc; background:#fff; border-radius:12px;
   padding:12px; font-size:16px; line-height:1.5; resize:none; color:var(--fg) }
 
-/* 비밀번호 모달 */
+/* 비밀번호 모달(관리자 진입 전) */
 .modal{ position:fixed; inset:0; display:none; background:rgba(0,0,0,.4); align-items:center; justify-content:center; padding:16px }
-.modal-box{ width:min(420px,94vw); background:#fff; border:1px solid #e6e6ea; border-radius:16px; box-shadow:var(--shadow); padding:18px }
-.modal h4{ margin:0 0 12px 0; font-size:18px; text-align:center; font-weight:600 }
-.input{ width:100%; border:1px solid #dcdcdc; border-radius:12px; padding:10px 12px; font-size:16px; text-align:center }
+
+/* 모달 상자: #cfd5bb + 흰 텍스트 */
+.modal-box{
+  width:min(420px,94vw);
+  background: var(--box);
+  color: #fff;
+  border:1px solid var(--box-border);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  padding:18px;
+}
+.modal h4{
+  margin:0 0 12px 0; font-size:18px; text-align:center; font-weight:600; color:#fff;
+}
+.input{
+  width:100%; border:1px solid #dcdcdc; border-radius:12px; padding:10px 12px; font-size:16px;
+  text-align:center; background:#fff; color:#000;
+}
 .modal-row{ display:flex; gap:10px; margin-top:12px }
-.modal-row .button{ margin:0; flex:1 }
+.modal-row .button{ margin:0; flex:1 } /* 취소=box색 흰글자 / 확인=cta */
 
 /* 토스트 */
 .toast{
@@ -208,14 +233,24 @@ const CLICK_MS = 160;
 const $ = id => document.getElementById(id);
 const chat = () => $("chat-content");
 
-/* 애니메이션 없는 렌더: 전환 시 항상 맨 위 */
+/* 공통 렌더: 전환 시 항상 맨 위 */
 function render(html){
   const c = chat();
   c.innerHTML = html;
   c.scrollTop = 0;
 }
 
-/* 최근 제출 정보 로컬 저장/복원 (관리자에서 표시) */
+/* 부드럽게 맨 아래로 스크롤 */
+function smoothToBottom(){
+  const c = chat();
+  if (typeof c.scrollTo === 'function') {
+    c.scrollTo({ top: c.scrollHeight, behavior: 'smooth' });
+  } else {
+    c.scrollTop = c.scrollHeight;
+  }
+}
+
+/* 최근 제출 정보 로컬 저장/복원 */
 function saveLastSubmission(){
   if(!lastClickedBook) return;
   lastSubmittedBook = lastClickedBook;
@@ -373,12 +408,8 @@ function openEvaluation(){
     }
   });
 
-  // 평가 섹션이 바로 보이도록 최하단으로 스크롤
-  requestAnimationFrame(()=>{
-    const c = chat();
-    c.scrollTop = c.scrollHeight;
-    setTimeout(()=>{ c.scrollTop = c.scrollHeight; }, 50);
-  });
+  /* 평가하기 진입 시 입력 영역이 바로 보이도록 부드럽게 맨 아래로 */
+  requestAnimationFrame(()=>{ smoothToBottom(); setTimeout(smoothToBottom, 50); });
 }
 
 async function submitReview(){
@@ -386,14 +417,12 @@ async function submitReview(){
   if(!satisfaction){ haptic.error(); return alert("만족도를 먼저 선택해주세요!"); }
   if(!text){ haptic.error(); return alert("의견을 입력해주세요!"); }
 
-  // 즉시 “감사합니다” 토스트 표시 + 하단 스크롤 고정
+  // 즉시 “감사합니다” 토스트 표시
   const toast = document.getElementById("thanksToast");
   toast.style.display = "block";
-  requestAnimationFrame(()=>{
-    const c = chat();
-    c.scrollTop = c.scrollHeight;
-    setTimeout(()=>{ c.scrollTop = c.scrollHeight; }, 50);
-  });
+
+  /* 제출 직후에도 부드럽게 맨 아래로 이동 */
+  requestAnimationFrame(()=>{ smoothToBottom(); setTimeout(smoothToBottom, 60); });
 
   // 버튼/입력 비활성화
   const submitBtn = document.getElementById("submitBtn");
