@@ -25,7 +25,7 @@ textarea{width:100%;border-radius:12px;padding:10px;border:1px solid #bbb;font-f
 .emoji{font-size:2.2rem;cursor:pointer;transition:transform .25s ease, filter .25s ease}
 @media (hover:hover){ .emoji:hover{transform:scale(1.1)} }
 .selected{transform:scale(1.25) !important;filter:drop-shadow(0 0 5px #555) !important}
-/* 🍏 애플 스타일 bounce 효과 */
+/* 🍏 애플 느낌 bounce 효과 */
 @keyframes bounce {
   0% { transform: scale(1); }
   40% { transform: scale(1.35); }
@@ -61,6 +61,10 @@ const data={
 
 let satisfaction="";let selectedType="";let selectedLevel="";
 
+// 🎵 딸깍 사운드 초기화
+const clickSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+clickSound.volume = 0.3;
+
 function loadHome(){
   const chat=document.getElementById("chat-content");
   chat.innerHTML=`
@@ -71,6 +75,7 @@ function loadHome(){
       <button class="button" onclick="selectType('기출')">기출</button>
     </div>`;
 }
+
 function selectType(type){
   selectedType=type;
   const chat=document.getElementById("chat-content");
@@ -80,6 +85,7 @@ function selectType(type){
     chat.innerHTML=`<h3>${type} 난이도를 선택하세요</h3>`+[1,2,3,4,5].map(i=>`<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
   }else{ showRecommend(); }
 }
+
 function showRecommend(level){
   selectedLevel=level||"";
   const chat=document.getElementById("chat-content");
@@ -91,6 +97,7 @@ function showRecommend(level){
       <button class="button" onclick="openSatisfaction()">평가하기</button>
     </div>`;
 }
+
 function openSatisfaction(){
   const chat=document.getElementById("chat-content");
   chat.innerHTML+=`
@@ -104,12 +111,16 @@ function openSatisfaction(){
         <span class="emoji" data-value="매우 만족">😍</span>
       </div>
     </div>`;
+
   document.querySelectorAll(".emoji").forEach(el=>{
     el.addEventListener("click",function(){
       document.querySelectorAll(".emoji").forEach(e=>{e.classList.remove("selected","bounce");});
       void this.offsetHeight; // reflow
-      this.classList.add("selected","bounce"); // 🍏 bounce 효과
+      this.classList.add("selected","bounce");
       satisfaction=this.getAttribute("data-value");
+      clickSound.currentTime = 0;
+      clickSound.play(); // 🔊 클릭할 때 사운드
+
       if(!document.getElementById("reviewBox")){
         chat.innerHTML+=`
           <div id="reviewBox">
@@ -117,11 +128,14 @@ function openSatisfaction(){
             <button class="button" onclick="submitReview()">제출</button>
           </div>`;
       }
-      const c=document.getElementById("chat-content");c.scrollTop=c.scrollHeight;
+      const c=document.getElementById("chat-content");
+      c.scrollTop=c.scrollHeight;
     },{passive:true});
   });
-  const c=document.getElementById("chat-content");c.scrollTop=c.scrollHeight;
+  const c=document.getElementById("chat-content");
+  c.scrollTop=c.scrollHeight;
 }
+
 async function submitReview(){
   const text=document.getElementById("reviewText").value.trim();
   if(!text){alert("의견을 입력해주세요!");return;}
