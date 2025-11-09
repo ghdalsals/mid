@@ -5,17 +5,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>문제집 추천 알고리즘</title>
 <style>
-:root{--bg:#f4f4f4;--chat-bg:#fff;--text:#1d1d1f;--btn:#e0e0e0;--btn-h:#d4d4d4;--btn-a:#c7c7c7;--bd:#ccc;--radius:18px;--shadow:0 6px 20px rgba(0,0,0,.08)}
-body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Noto Sans KR",sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}
-.chat-container{width:440px;height:640px;background:var(--chat-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;transition:opacity .6s ease}
+/* ✅ 좌우 스크롤 완전 차단 + 박스사이징 통일 */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow-x:hidden;-webkit-text-size-adjust:100%}
+
+:root{
+  --bg:#f4f4f4;--chat-bg:#fff;--text:#1d1d1f;
+  --btn:#e0e0e0;--btn-h:#d4d4d4;--btn-a:#c7c7c7;--bd:#ccc;
+  --radius:18px;--shadow:0 6px 20px rgba(0,0,0,.08)
+}
+body{
+  background:var(--bg);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Noto Sans KR",sans-serif;
+  display:flex;justify-content:center;align-items:center;min-height:100vh
+}
+.chat-container{
+  width:min(440px,92vw);
+  height:min(640px,92vh);
+  background:var(--chat-bg);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:22px;
+  display:flex;flex-direction:column;
+  transition:opacity .6s ease
+}
 .fade-out{opacity:0;pointer-events:none}
-#chat-content{flex-grow:1;overflow-y:auto;scroll-behavior:smooth;color:var(--text);font-size:1rem}
-.button{background:var(--btn);color:var(--text);border:1px solid var(--bd);border-radius:var(--radius);padding:14px;margin:10px 0;font-size:1.05rem;cursor:pointer;width:100%;transition:all .25s ease}
+#chat-content{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  scroll-behavior:smooth;color:var(--text);font-size:1rem
+}
+h3{margin:0 0 14px 0;font-size:1.1rem;text-align:center}
+.button{
+  background:var(--btn);color:var(--text);border:1px solid var(--bd);
+  border-radius:var(--radius);padding:14px;margin:10px 0;
+  font-size:1.05rem;cursor:pointer;transition:all .25s ease;width:100%
+}
 .button:hover{background:var(--btn-h);transform:translateY(-1px)}
 .button:active{background:var(--btn-a);transform:scale(.98)}
-.bottom-bar{display:flex;justify-content:space-between;gap:10px;margin-top:10px}
-.review-card{background:#f9f9f9;border-radius:12px;padding:10px;margin:8px 0;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.bottom-bar{
+  display:flex;gap:10px;margin-top:10px
+}
+/* ✅ 하단바 버튼은 컨테이너 안에서 균등 분할, 절대 넘치지 않음 */
+.bottom-bar .button{
+  width:auto;flex:1;min-width:0;margin:0
+}
 
+.review-card{
+  background:#f9f9f9;border-radius:12px;padding:10px;margin:8px 0;
+  box-shadow:0 2px 6px rgba(0,0,0,.05)
+}
+
+/* 평가(라디오 기반 이모지) */
 .rating-group{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:10px;justify-items:center;align-items:center}
 .rating-group input{position:absolute;opacity:0;width:0;height:0}
 .emoji-label{font-size:2.2rem;cursor:pointer;display:inline-block;transform:scale(1);transition:transform .2s ease, filter .2s ease}
@@ -23,12 +63,25 @@ body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro T
 @keyframes bounce{0%{transform:scale(1)}35%{transform:scale(1.35)}70%{transform:scale(0.9)}100%{transform:scale(1.25)}}
 .pulse{animation:bounce .32s cubic-bezier(.25,.46,.45,.94)}
 
-textarea{width:100%;border-radius:12px;padding:10px;border:1px solid #bbb;resize:none;font-size:.95rem;background:#fafafa;color:#000}
+textarea{
+  width:100%;max-width:100%;
+  border-radius:12px;padding:10px;border:1px solid #bbb;
+  resize:none;font-size:.95rem;background:#fafafa;color:#000
+}
 
-/* 비밀번호 모달 */
-#passwordModal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center}
-.modal-box{background:#fff;padding:20px;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,.3);text-align:center;width:260px}
-.modal-box input{width:100%;padding:8px;margin-top:10px;border:1px solid #ccc;border-radius:8px;font-size:1rem;text-align:center}
+/* 🔒 비밀번호 모달: 중앙, 좌우대칭, Enter 지원 */
+#passwordModal{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);
+  display:none;justify-content:center;align-items:center;padding:16px
+}
+.modal-box{
+  background:#fff;padding:18px;border-radius:15px;
+  box-shadow:0 4px 15px rgba(0,0,0,.3);width:min(360px,94vw)
+}
+.modal-title{margin:0 0 10px 0;text-align:center;font-weight:600}
+.modal-row{display:flex;gap:10px;margin-top:10px}
+.modal-row .button{margin:0;flex:1}
+.modal-input{width:100%;padding:10px;border:1px solid #ccc;border-radius:10px;font-size:1rem;text-align:center}
 </style>
 </head>
 <body>
@@ -42,12 +95,14 @@ textarea{width:100%;border-radius:12px;padding:10px;border:1px solid #bbb;resize
 </div>
 
 <!-- 비밀번호 입력 모달 -->
-<div id="passwordModal">
+<div id="passwordModal" aria-modal="true" role="dialog">
   <div class="modal-box">
-    <h3>관리자 비밀번호 입력</h3>
-    <input type="password" id="adminPass" placeholder="비밀번호">
-    <button class="button" style="margin-top:10px;" onclick="checkPassword()">확인</button>
-    <button class="button" style="margin-top:6px;" onclick="closePasswordModal()">취소</button>
+    <h3 class="modal-title">관리자 비밀번호 입력</h3>
+    <input type="password" id="adminPass" class="modal-input" placeholder="비밀번호" autocomplete="current-password">
+    <div class="modal-row" style="margin-top:12px">
+      <button class="button" id="pwConfirmBtn">확인</button>
+      <button class="button" id="pwCancelBtn">취소</button>
+    </div>
   </div>
 </div>
 
@@ -66,8 +121,7 @@ const data={
 let satisfaction="",selectedType="",selectedLevel="",currentPage="home";
 
 function loadHome(){
-  currentPage="home";
-  satisfaction="";
+  currentPage="home"; satisfaction="";
   const c=document.getElementById("chat-content");
   c.innerHTML=`
     <div>
@@ -83,9 +137,9 @@ function selectType(t){
   const c=document.getElementById("chat-content");
   if(t==="개념서"){
     c.innerHTML=`<h3>${t} 난이도를 선택하세요</h3>`+[1,2,3,4].map(i=>`<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
-  } else if(t==="유형 심화서"){
+  }else if(t==="유형 심화서"){
     c.innerHTML=`<h3>${t} 난이도를 선택하세요</h3>`+[1,2,3,4,5].map(i=>`<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
-  } else {
+  }else{
     showRecommend();
   }
 }
@@ -104,7 +158,6 @@ function showRecommend(lv){
 }
 
 function openEvaluation(){
-  // 이미 있으면 중복 생성하지 않고 스크롤만
   if(document.getElementById("evalSection")){
     document.getElementById("evalSection").scrollIntoView({behavior:'smooth',block:'start'});
     return;
@@ -114,22 +167,12 @@ function openEvaluation(){
     <div id="evalSection">
       <h3>이 추천에 얼마나 만족하시나요?</h3>
       <div class="rating-group" id="ratingGroup">
-        <input id="rate1" type="radio" name="satisfaction" value="불만족">
-        <label class="emoji-label" for="rate1" title="불만족">😡</label>
-
-        <input id="rate2" type="radio" name="satisfaction" value="조금 불만족">
-        <label class="emoji-label" for="rate2" title="조금 불만족">😕</label>
-
-        <input id="rate3" type="radio" name="satisfaction" value="보통">
-        <label class="emoji-label" for="rate3" title="보통">😐</label>
-
-        <input id="rate4" type="radio" name="satisfaction" value="만족">
-        <label class="emoji-label" for="rate4" title="만족">🙂</label>
-
-        <input id="rate5" type="radio" name="satisfaction" value="매우 만족">
-        <label class="emoji-label" for="rate5" title="매우 만족">😍</label>
+        <input id="rate1" type="radio" name="satisfaction" value="불만족"><label class="emoji-label" for="rate1">😡</label>
+        <input id="rate2" type="radio" name="satisfaction" value="조금 불만족"><label class="emoji-label" for="rate2">😕</label>
+        <input id="rate3" type="radio" name="satisfaction" value="보통"><label class="emoji-label" for="rate3">😐</label>
+        <input id="rate4" type="radio" name="satisfaction" value="만족"><label class="emoji-label" for="rate4">🙂</label>
+        <input id="rate5" type="radio" name="satisfaction" value="매우 만족"><label class="emoji-label" for="rate5">😍</label>
       </div>
-
       <div id="reviewBox" style="margin-top:10px;">
         <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
         <button class="button" onclick="submitReview()">제출</button>
@@ -137,32 +180,16 @@ function openEvaluation(){
     </div>
   `);
 
-  // 라디오 변경 시: 만족도 저장 + 애니메이션
   const radios=[...document.querySelectorAll('input[name="satisfaction"]')];
-  const labels=[...document.querySelectorAll('.emoji-label')];
-
   function pulseLabelById(id){
     const lab=document.querySelector(`label[for="${id}"]`);
     if(!lab) return;
-    lab.classList.remove('pulse'); // 재생 보장
-    void lab.offsetWidth;          // reflow
-    lab.classList.add('pulse');
+    lab.classList.remove('pulse'); void lab.offsetWidth; lab.classList.add('pulse');
   }
-
   radios.forEach(r=>{
     r.addEventListener('change',e=>{
-      satisfaction=e.target.value;       // 현재 선택값
-      pulseLabelById(e.target.id);       // 언제나 bounce
-    });
-  });
-
-  // 같은 아이콘을 다시 눌러도 bounce가 보이도록 라벨 클릭에도 처리
-  labels.forEach(l=>{
-    l.addEventListener('click',()=>{
-      const id=l.getAttribute('for');
-      const r=document.getElementById(id);
-      // 이미 체크되어 있더라도 시각 피드백은 항상 실행
-      setTimeout(()=>pulseLabelById(id),0);
+      satisfaction=e.target.value;
+      pulseLabelById(e.target.id);
     });
   });
 
@@ -174,19 +201,25 @@ async function submitReview(){
   if(!satisfaction) return alert("만족도를 먼저 선택해주세요!");
   if(!text) return alert("의견을 입력해주세요!");
   await fetch(`${SCRIPT_URL}?action=review&type=${selectedType}&level=${selectedLevel}&review=${encodeURIComponent("["+satisfaction+"] "+text)}&session=${SESSION_ID}`);
-  // fade-out → 홈 복귀
   const box=document.getElementById('chatBox');
   box.classList.add('fade-out');
   setTimeout(()=>{ box.classList.remove('fade-out'); loadHome(); },600);
 }
 
-/* 하트 → 비밀번호 모달 */
-document.getElementById("heartBtn").onclick=()=>showPasswordModal();
-function showPasswordModal(){document.getElementById("passwordModal").style.display="flex";}
-function closePasswordModal(){document.getElementById("passwordModal").style.display="none";}
+/* ▼ 하트 → 비밀번호 모달 (좌우대칭 + Enter=확인) */
+const modal=document.getElementById("passwordModal");
+const passInput=document.getElementById("adminPass");
+document.getElementById("heartBtn").onclick=()=>{ modal.style.display="flex"; passInput.value=""; passInput.focus(); };
+document.getElementById("pwCancelBtn").onclick=()=>{ modal.style.display="none"; };
+document.getElementById("pwConfirmBtn").onclick=checkPassword;
+/* ✅ Enter 키로 확인 실행 */
+passInput.addEventListener('keydown',(e)=>{
+  if(e.key==="Enter"){ e.preventDefault(); checkPassword(); }
+});
 function checkPassword(){
-  const pw=document.getElementById("adminPass").value.trim();
-  if(pw==="0411"){closePasswordModal();loadReviews();}else alert("잘못된 비밀번호입니다.");
+  const pw=passInput.value.trim();
+  if(pw==="0411"){ modal.style.display="none"; loadReviews(); }
+  else alert("잘못된 비밀번호입니다.");
 }
 async function loadReviews(){
   const res=await fetch(`${SCRIPT_URL}?action=read`);
@@ -206,10 +239,10 @@ function calcAverage(arr){
   return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):"데이터 없음";
 }
 
-/* 되돌아가기 / 처음으로 */
+/* ▼ 되돌아가기 / 처음으로 (기출 예외 포함) */
 document.getElementById("homeBtn").onclick=()=>loadHome();
 document.getElementById("backBtn").onclick=()=>{
-  if(selectedType==="기출"){loadHome();return;}
+  if(selectedType==="기출"){ loadHome(); return; }
   if(currentPage==="result") selectType(selectedType);
   else loadHome();
 };
