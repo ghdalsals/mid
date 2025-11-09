@@ -18,9 +18,33 @@ body{
   display:flex;align-items:center;justify-content:center;
   padding: clamp(18px, 4vw, 36px);
 }
-.chat{ width:min(480px,94vw); height:min(700px,92vh); background:#fff; border:1px solid var(--line);
+
+/* ✅ 실제 스마트폰 비율: 기본 9:19.5, 모바일에선 svh로 꽉 채움 */
+.chat{
+  /* 가로폭: 휴대폰 폭에 맞게, 데스크탑에서도 너무 넓지 않게 */
+  width: clamp(360px, 92vw, 430px);
+
+  /* 아이폰 비율(9:19.5) 미리보기 */
+  aspect-ratio: 9 / 19.5;
+  height: auto;
+
+  /* 브라우저 UI(주소창 등) 제외한 안전 높이 */
+  max-height: calc(100svh - 24px);
+
+  background:#fff; border:1px solid var(--line);
   border-radius:var(--radius); box-shadow:var(--shadow);
-  display:flex; flex-direction:column; overflow:hidden; transition:opacity .6s var(--ease) }
+  display:flex; flex-direction:column; overflow:hidden; transition:opacity .6s var(--ease)
+}
+@media (max-width: 600px){
+  body{ padding:12px; }
+  .chat{
+    width: 100%;
+    height: calc(100svh - 24px); /* 주소창 포함 안전 높이 */
+    aspect-ratio: auto;          /* 비율 고정 해제 */
+    border-radius: 18px;
+  }
+}
+
 .fade-out{opacity:0;pointer-events:none}
 .header{ padding: calc(var(--space) - 4px) var(--space) var(--space); border-bottom:1px solid var(--line) }
 .title{ margin:0; font-size:22px; font-weight:600; letter-spacing:-.02em; text-align:center }
@@ -36,13 +60,29 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 }
 .button:hover{ transform:translateY(-1px); filter:brightness(1.02) }
 .button:active{ transform:translateY(0); filter:brightness(.98) }
-.button.cta{ background:var(--cta); color:#fff; border-color:var(--cta) }
+
+/* ⬇⬇ 평가하기/제출 회색 톤(조금 더 진하게) */
+.button.cta{
+  background:#d9d9de;      /* 기본 */
+  color:#1d1d1f;
+  border-color:#c7c7cc;
+}
+.button.cta:hover{
+  transform:translateY(-1px);
+  background:#e5e5ea;      /* hover */
+  filter:none;
+}
+.button.cta:active{
+  transform:translateY(0);
+  background:#cfcfd6;      /* active */
+  filter:none;
+}
 
 /* 하단바 */
 .bottom{ display:flex; gap:10px; padding: var(--space); border-top:1px solid var(--line) }
 .bottom .button{ margin:0; flex:1; min-width:0; text-align:center }
 
-/* 추천 카드: 클릭 피드백 + 단일 선택 강조 */
+/* 추천 카드: 클릭 피드백 + 단일 선택 강조 + 토글 */
 .card{
   background:var(--elev); border:1px solid var(--line); border-radius:14px;
   padding:12px 14px; font-size:16px; margin:8px 0; cursor:pointer;
@@ -74,7 +114,7 @@ textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#
 .modal-row{ display:flex; gap:10px; margin-top:12px }
 .modal-row .button{ margin:0; flex:1 }
 
-/* 홈 배너 */
+/* 홈 배너(지금은 미사용이지만 유지) */
 .banner{
   background:#f5f5f7; border:1px solid var(--line); color:var(--fg);
   border-radius:12px; padding:10px 12px; margin-bottom:12px; position:relative;
@@ -83,6 +123,14 @@ textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#
   position:absolute; right:10px; top:8px; border:none; background:transparent;
   font-size:18px; cursor:pointer; color:var(--muted);
 }
+
+/* 제출 즉시 보여줄 미니 토스트 */
+.toast{
+  margin-top:10px; text-align:center; font-weight:600;
+  background:#f5f5f7; border:1px solid var(--line); border-radius:10px; padding:10px;
+  animation: fadein .2s var(--ease);
+}
+@keyframes fadein{ from{opacity:0} to{opacity:1} }
 </style>
 </head>
 <body>
@@ -170,7 +218,7 @@ function getLastSubmission(){
   };
 }
 
-/* ===== 홈 렌더링(배너 지원) ===== */
+/* ===== 홈 렌더링 ===== */
 function viewHome(msg){
   currentPage="home"; satisfaction="";
   chat().innerHTML = `
@@ -186,9 +234,9 @@ function viewHome(msg){
       <button class="button" onclick="viewType('기출')">기출</button>
     </div>`;
   scrollTop();
-  if(msg){ setTimeout(()=>{ const b=document.querySelector('.banner'); if(b) b.remove(); }, 5000); }
 }
 
+/* 유형/난이도 */
 function viewType(t){
   currentPage="type"; selectedType=t;
   fetch(`${SCRIPT_URL}?action=select&type=${encodeURIComponent(t)}&session=${encodeURIComponent(SESSION_ID)}`).catch(()=>{});
@@ -200,6 +248,7 @@ function viewType(t){
   scrollTop();
 }
 
+/* 결과(책 리스트 + 토글 선택) */
 function viewResult(lv){
   currentPage="result"; selectedLevel=lv||""; satisfaction="";
   if(selectedType!=="기출"){
@@ -216,33 +265,41 @@ function viewResult(lv){
   const listEl = document.getElementById("bookList");
   listEl.innerHTML = books.map((b,i)=>`<div class="card" data-book="${b}" tabindex="0" role="button" aria-label="${b}">${i+1}. ${b}</div>`).join('');
 
-  // 단일 선택 유지 + 클릭 로그
+  // 단일 선택 유지 + 토글 + (선택 시에만 book 로그)
   const clearSelected = () => listEl.querySelectorAll(".card.selected").forEach(n=>n.classList.remove("selected"));
   listEl.querySelectorAll(".card").forEach(el=>{
     const book = el.getAttribute("data-book");
-    const logClick = ()=>{
+    const handleToggle = ()=>{
       haptic.light();
-      lastClickedBook = book;
-
-      // 짧은 클릭 피드백 + 단일 선택 유지
+      // 클릭 피드백
       el.classList.add("clicked");
       setTimeout(()=>{ el.classList.remove("clicked"); }, 420);
-      clearSelected();
-      el.classList.add("selected");
 
-      fetch(`${SCRIPT_URL}?action=book&type=${encodeURIComponent(selectedType)}&level=${encodeURIComponent(selectedLevel)}&book=${encodeURIComponent(book)}&session=${encodeURIComponent(SESSION_ID)}`).catch(()=>{});
+      if(el.classList.contains("selected")){
+        // ⛔ 선택 해제 (로그 전송 없음)
+        el.classList.remove("selected");
+        if(lastClickedBook === book) lastClickedBook = "";
+      }else{
+        // ✅ 선택
+        clearSelected();
+        el.classList.add("selected");
+        lastClickedBook = book;
+        fetch(`${SCRIPT_URL}?action=book&type=${encodeURIComponent(selectedType)}&level=${encodeURIComponent(selectedLevel)}&book=${encodeURIComponent(book)}&session=${encodeURIComponent(SESSION_ID)}`).catch(()=>{});
+      }
     };
-    el.addEventListener("click", logClick);
-    el.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); logClick(); }});
+    el.addEventListener("click", handleToggle);
+    el.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); handleToggle(); }});
   });
 
-  $("evalBtn").onclick = ()=>{ haptic.medium(); openEvaluation(); };
+  document.getElementById("evalBtn").onclick = ()=>{ haptic.medium(); openEvaluation(); };
   scrollTop();
 }
 
 /* ===== 평가 ===== */
 function openEvaluation(){
-  if($("evalSection")){ $("evalSection").scrollIntoView({behavior:'smooth',block:'start'}); return; }
+  if(document.getElementById("evalSection")){
+    document.getElementById("evalSection").scrollIntoView({behavior:'smooth',block:'start'}); return;
+  }
   chat().insertAdjacentHTML('beforeend', `
     <div id="evalSection" style="margin-top:14px">
       <h3>만족도 선택</h3>
@@ -256,6 +313,7 @@ function openEvaluation(){
       <div style="margin-top:12px">
         <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
         <button class="button cta" style="margin-top:10px" id="submitBtn">제출</button>
+        <div id="thanksToast" class="toast" style="display:none;">✅ 평가가 제출되었습니다. 감사합니다! 🙏</div>
       </div>
     </div>
   `);
@@ -266,9 +324,9 @@ function openEvaluation(){
   radios.forEach(r=>{ r.addEventListener('change',e=>{ satisfaction=e.target.value; haptic.light(); pulse(e.target.id); }); });
   document.querySelectorAll('.emoji').forEach(l=>{ l.addEventListener('click',()=>{ const id=l.getAttribute('for'); setTimeout(()=>pulse(id),0); }); });
 
-  // Enter 제출 (Shift+Enter는 줄바꿈)
-  const ta = $("reviewText");
-  const submitBtn = $("submitBtn");
+  // Enter 제출 (Shift+Enter 줄바꿈)
+  const ta = document.getElementById("reviewText");
+  const submitBtn = document.getElementById("submitBtn");
   const onSubmit = ()=>submitReview();
   submitBtn.addEventListener("click", onSubmit);
   ta.addEventListener("keydown",(e)=>{
@@ -282,27 +340,43 @@ function openEvaluation(){
 }
 
 async function submitReview(){
-  const text = ($("reviewText")?.value||"").trim();
+  const text = (document.getElementById("reviewText")?.value||"").trim();
   if(!satisfaction){ haptic.error(); return alert("만족도를 먼저 선택해주세요!"); }
   if(!text){ haptic.error(); return alert("의견을 입력해주세요!"); }
+
+  // ✅ 즉시 “감사합니다” 토스트 표시 (전송 대기감 숨기기)
+  const toast = document.getElementById("thanksToast");
+  toast.style.display = "block";
+
+  // 버튼/입력 비활성화
+  const submitBtn = document.getElementById("submitBtn");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "전송 중…";
+  const ta = document.getElementById("reviewText");
+  ta.readOnly = true;
+
   try{
     await fetch(`${SCRIPT_URL}?action=review&type=${encodeURIComponent(selectedType)}&level=${encodeURIComponent(selectedLevel)}&review=${encodeURIComponent("["+satisfaction+"] "+text)}&session=${encodeURIComponent(SESSION_ID)}`);
     saveLastSubmission(); // 최근 제출 당시 선택한 문제집 저장
     haptic.success();
-    const box=$("chatBox"); box.classList.add('fade-out');
-    setTimeout(()=>{
-      box.classList.remove('fade-out');
-      viewHome("✅ 평가가 제출되었습니다. 감사합니다! 🙏");
-    },600);
+
+    // 전송 완료되면 바로 홈으로 이동 (홈에는 배너 없음)
+    const box=document.getElementById("chatBox"); box.classList.add('fade-out');
+    setTimeout(()=>{ box.classList.remove('fade-out'); viewHome(); }, 450);
   }catch(e){
     haptic.error();
-    alert("네트워크 오류가 발생했습니다.");
+    alert("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
+    // 실패 시 원복
+    toast.style.display = "none";
+    submitBtn.disabled = false;
+    submitBtn.textContent = "제출";
+    ta.readOnly = false;
   }
 }
 
 /* ===== 하단 버튼 ===== */
-$("homeBtn").onclick = ()=>{ haptic.medium(); viewHome(); };
-$("backBtn").onclick = ()=>{
+document.getElementById("homeBtn").onclick = ()=>{ haptic.medium(); viewHome(); };
+document.getElementById("backBtn").onclick = ()=>{
   haptic.light();
   if(selectedType==="기출"){ viewHome(); return; }
   if(currentPage==="result"){ viewType(selectedType); }
@@ -310,13 +384,13 @@ $("backBtn").onclick = ()=>{
 };
 
 /* ===== 하트 → 비밀번호(클라이언트 해시 비교) + 최근 제출 정보 노출 ===== */
-const modal = $("passwordModal"), pass = $("adminPass");
-$("heartBtn").onclick = ()=>{
+const modal = document.getElementById("passwordModal"), pass = document.getElementById("adminPass");
+document.getElementById("heartBtn").onclick = ()=>{
   haptic.medium();
   modal.style.display="flex"; pass.value=""; pass.focus();
 };
-$("pwCancelBtn").onclick = ()=>{ haptic.light(); modal.style.display="none"; };
-$("pwConfirmBtn").onclick = ()=>{ haptic.medium(); checkPassword(); };
+document.getElementById("pwCancelBtn").onclick = ()=>{ haptic.light(); modal.style.display="none"; };
+document.getElementById("pwConfirmBtn").onclick = ()=>{ haptic.medium(); checkPassword(); };
 pass.addEventListener('keydown',e=>{
   if(e.key==="Enter"){ e.preventDefault(); haptic.medium(); checkPassword(); }
 });
