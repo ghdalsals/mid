@@ -9,7 +9,9 @@
 html,body{height:100%;margin:0;overflow-x:hidden;-webkit-text-size-adjust:100%}
 :root{
   --outer:#dbdfcc;        /* 바깥 배경 */
-  --bg:#ffffff; --fg:#1d1d1f; --muted:#3c3c3e; --line:#b6bca4;
+  --bg:#ffffff;
+  --fg:#303323;           /* ✅ 본문 텍스트 컬러 (요청) */
+  --muted:#3c3c3e; --line:#b6bca4;
   --radius:20px; --space:22px; --shadow:0 14px 40px rgba(0,0,0,.08);
   --speed:.18s; --ease:cubic-bezier(.25,.46,.45,.94);
   --card-anim:160ms;
@@ -59,22 +61,22 @@ body{
 }
 
 .header{ padding: calc(var(--space) - 4px) var(--space) var(--space); border-bottom:1px solid #ededf0 }
-.title{ margin:0; font-size:22px; font-weight:600; letter-spacing:-.02em; text-align:center }
+.title{ margin:0; font-size:22px; font-weight:600; letter-spacing:-.02em; text-align:center; color:var(--fg); }
 
 /* 스크롤 컨테이너 */
 #chat-content{
   flex:1; padding: var(--space); overflow-y:auto; overflow-x:hidden;
-  scroll-behavior: smooth;
+  scroll-behavior: smooth; color:var(--fg);
 }
 
-h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
+h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center; color:var(--fg) }
 .p{margin:0; color:var(--muted); font-size:16.5px}
 
 /* ✅ 박스 내부 폰트 두께 통일(600) */
 .button, .button * ,
 .card, .card * ,
 .modal-box, .modal-box * ,
-.toast, .toast * { font-weight:600; }
+.toast, .toast * { font-weight:600; color:inherit }
 .button b, .button strong,
 .card b, .card strong,
 .modal-box b, .modal-box strong,
@@ -105,13 +107,17 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .bottom .button:hover{ transform:translateY(-1px); filter:brightness(1.03); }
 .bottom .button:active{ transform:translateY(0); filter:brightness(.97); }
 
-/* 하트 아이콘(SF Symbols 느낌, 아웃라인) */
-.icon{ width:22px; height:22px; display:inline-block; vertical-align:middle; }
+/* 하트 아이콘(SF Symbols 느낌, 아웃라인) — ✅ 크기 축소 */
+.icon{
+  width:18px;  /* 22 → 18로 축소 (←, ⌂와 균형) */
+  height:18px;
+  display:inline-block; vertical-align:middle;
+}
 .icon svg{ width:100%; height:100%; display:block; }
 .icon svg path{
   fill: none;              /* 중앙 뚫림 */
   stroke: #ffffff;         /* 흰색 윤곽선 */
-  stroke-width: 1.8;
+  stroke-width: 1.8;       /* 두께는 유지 */
   stroke-linecap: round;
   stroke-linejoin: round;
   transition: stroke .18s var(--ease), stroke-width .18s var(--ease), transform .18s var(--ease);
@@ -195,7 +201,7 @@ textarea{ width:100%; max-width:100%; border:1px solid #dcdcdc; background:#fff;
     <div class="bottom" role="group" aria-label="하단 도구">
       <button class="button" id="backBtn"  aria-label="되돌아가기" title="되돌아가기">←</button>
       <button class="button" id="homeBtn"  aria-label="처음으로"   title="처음으로">⌂</button>
-      <!-- ✅ 아웃라인 하트(SVG) -->
+      <!-- ✅ 테두리만 있는 하트 (크기 18px) -->
       <button class="button" id="heartBtn" aria-label="관리자" title="관리자">
         <span class="icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" focusable="false">
