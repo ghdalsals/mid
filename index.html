@@ -8,13 +8,23 @@
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow-x:hidden;-webkit-text-size-adjust:100%}
 :root{
-  --bg:#ffffff; --fg:#1d1d1f; --muted:#6e6e73; --line:#d2d2d7; --elev:#f5f5f7;
+  --bg:#ffffff; --fg:#1d1d1f; --muted:#3c3c3e; --line:#b6bca4;
   --radius:20px; --space:22px; --shadow:0 14px 40px rgba(0,0,0,.08);
-  --speed:.2s; --ease:cubic-bezier(.25,.46,.45,.94);
-  --card-anim: 200ms;
-  --cta:#899656;           /* ✅ 요구 색상 */
-  --cta-hover:#7d8a4e;     /* 살짝 어둡게 */
-  --cta-active:#6f7b45;    /* 더 어둡게 */
+  --speed:.18s; --ease:cubic-bezier(.25,.46,.45,.94);
+  --card-anim: 160ms;
+
+  /* ✅ 요청 색 */
+  --box:#cfd5bb;          /* 유형/난이도/미선택 카드 + 하단 버튼 */
+  --box-border:#b8c2a2;
+
+  /* ✅ CTA 색 */
+  --cta:#899656;
+  --cta-hover:#7d8a4e;
+  --cta-active:#6f7b45;
+
+  /* ✅ 선택된 카드 색 */
+  --selected:#a0ab77;
+  --selected-border:#8f9b63;
 }
 
 /* 레이아웃 */
@@ -31,7 +41,7 @@ body{
   aspect-ratio: 9 / 19.5;
   height: auto;
   max-height: min(820px, calc(100svh - 24px));
-  background:#fff; border:1px solid var(--line);
+  background:#fff; border:1px solid #e5e5e7;
   border-radius:var(--radius); box-shadow:var(--shadow);
   display:flex; flex-direction:column; overflow:hidden;
 }
@@ -48,22 +58,22 @@ body{
   .chat{ aspect-ratio: 10 / 17; }
 }
 
-.header{ padding: calc(var(--space) - 4px) var(--space) var(--space); border-bottom:1px solid var(--line) }
+.header{ padding: calc(var(--space) - 4px) var(--space) var(--space); border-bottom:1px solid #ededf0 }
 .title{ margin:0; font-size:22px; font-weight:600; letter-spacing:-.02em; text-align:center }
 #chat-content{ flex:1; padding: var(--space); overflow-y:auto; overflow-x:hidden; }
 h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .p{margin:0; color:var(--muted); font-size:16.5px}
 
-/* 버튼(기본) */
+/* 버튼(기본) → ✅ box 색 적용 */
 .button{
-  display:block; width:100%; border:1px solid var(--line); background:var(--elev); color:var(--fg);
+  display:block; width:100%; border:1px solid var(--box-border); background:var(--box); color:#1a1a1a;
   border-radius:14px; padding:14px 16px; font-size:17px; font-weight:600; letter-spacing:-.01em; margin:10px 0;
-  cursor:pointer; transition:transform var(--speed) var(--ease), filter var(--speed) var(--ease), background var(--speed) var(--ease)
+  cursor:pointer; transition:transform var(--speed) var(--ease), filter var(--speed) var(--ease)
 }
 .button:hover{ transform:translateY(-1px); filter:brightness(1.02) }
 .button:active{ transform:translateY(0); filter:brightness(.98) }
 
-/* ✅ CTA(평가하기/제출) — #899656 배경 + 흰색 글자 */
+/* ✅ CTA(평가하기/제출) — #899656 배경 + 흰색 글자 (유일하게 box색과 다름) */
 .button.cta{
   background:var(--cta);
   color:#fff;
@@ -72,24 +82,33 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .button.cta:hover{ background:var(--cta-hover); transform:translateY(-1px) }
 .button.cta:active{ background:var(--cta-active); transform:translateY(0) }
 
-/* 하단바 */
-.bottom{ display:flex; gap:10px; padding: var(--space); border-top:1px solid var(--line) }
+/* 하단바 → 기본 버튼이 box색이므로 그대로 */
+.bottom{ display:flex; gap:10px; padding: var(--space); border-top:1px solid #ededf0 }
 .bottom .button{ margin:0; flex:1; min-width:0; text-align:center }
 
-/* 추천 카드: 클릭/선택 색 연하게 + 전환 속도 통일 */
+/* 추천 카드 → 기본 박스색(#cfd5bb) */
 .card{
-  background:var(--elev); border:1px solid var(--line); border-radius:14px;
+  background:var(--box); border:1px solid var(--box-border); border-radius:14px;
   padding:12px 14px; font-size:16px; margin:8px 0; cursor:pointer;
   transition:
     background-color var(--card-anim) var(--ease),
     transform        var(--card-anim) var(--ease),
     box-shadow       var(--card-anim) var(--ease),
-    opacity          var(--card-anim) var(--ease);
+    opacity          var(--card-anim) var(--ease),
+    color            var(--card-anim) var(--ease),
+    border-color     var(--card-anim) var(--ease);
+  color:#111;
 }
 .card:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.06) }
 .card:active{ transform:scale(.99) }
-.card.clicked{  background:#f0f0f3; }  /* 짧은 클릭 피드백(연함) */
-.card.selected{ background:#e9e9ee; }  /* 단일 선택 유지(연함) */
+/* 짧은 클릭 피드백은 밝기만 살짝 */
+.card.clicked{ filter:brightness(.97); }
+/* ✅ 선택 상태 */
+.card.selected{
+  background:var(--selected);
+  border-color:var(--selected-border);
+  color:#fff;
+}
 
 /* 만족도 라디오 */
 .rating{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:12px; justify-items:center; align-items:center }
@@ -101,21 +120,21 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .pulse{ animation:bounce .28s var(--ease) }
 
 /* textarea */
-textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#fff; border-radius:12px;
+textarea{ width:100%; max-width:100%; border:1px solid #dcdcdc; background:#fff; border-radius:12px;
   padding:12px; font-size:16px; line-height:1.5; resize:none; color:var(--fg) }
 
 /* 비밀번호 모달 */
 .modal{ position:fixed; inset:0; display:none; background:rgba(0,0,0,.4); align-items:center; justify-content:center; padding:16px }
-.modal-box{ width:min(420px,94vw); background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px }
+.modal-box{ width:min(420px,94vw); background:#fff; border:1px solid #e6e6ea; border-radius:16px; box-shadow:var(--shadow); padding:18px }
 .modal h4{ margin:0 0 12px 0; font-size:18px; text-align:center; font-weight:600 }
-.input{ width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:16px; text-align:center }
+.input{ width:100%; border:1px solid #dcdcdc; border-radius:12px; padding:10px 12px; font-size:16px; text-align:center }
 .modal-row{ display:flex; gap:10px; margin-top:12px }
 .modal-row .button{ margin:0; flex:1 }
 
 /* 토스트 */
 .toast{
   margin-top:10px; text-align:center; font-weight:600;
-  background:#f5f5f7; border:1px solid var(--line); border-radius:10px; padding:10px;
+  background:#f5f5f7; border:1px solid #e6e6ea; border-radius:10px; padding:10px;
 }
 </style>
 </head>
@@ -184,12 +203,12 @@ const data = {
 /* ===== 상태 & 유틸 ===== */
 let satisfaction = "", selectedType = "", selectedLevel = "", currentPage = "home";
 let lastClickedBook = "", lastSubmittedBook = "", lastSubmittedAt = "";
-const CLICK_MS = 200;
+const CLICK_MS = 160;
 
 const $ = id => document.getElementById(id);
 const chat = () => $("chat-content");
 
-/* ✅ 애니메이션 없는 렌더 헬퍼: 전환 시 항상 맨 위로 */
+/* 애니메이션 없는 렌더: 전환 시 항상 맨 위 */
 function render(html){
   const c = chat();
   c.innerHTML = html;
@@ -216,9 +235,7 @@ function viewHome(msg){
   currentPage="home"; satisfaction="";
   const html = `
     <div>
-      ${msg ? `
-        <div class="toast" role="status">${msg}</div>
-      ` : ``}
+      ${msg ? `<div class="toast" role="status">${msg}</div>` : ``}
       <p class="p" style="text-align:center;margin-bottom:14px">원하는 유형을 선택하세요</p>
       <button class="button" onclick="viewType('개념서')">개념서</button>
       <button class="button" onclick="viewType('유형 심화서')">유형 심화서</button>
@@ -355,6 +372,13 @@ function openEvaluation(){
       onSubmit();
     }
   });
+
+  // 평가 섹션이 바로 보이도록 최하단으로 스크롤
+  requestAnimationFrame(()=>{
+    const c = chat();
+    c.scrollTop = c.scrollHeight;
+    setTimeout(()=>{ c.scrollTop = c.scrollHeight; }, 50);
+  });
 }
 
 async function submitReview(){
@@ -362,7 +386,7 @@ async function submitReview(){
   if(!satisfaction){ haptic.error(); return alert("만족도를 먼저 선택해주세요!"); }
   if(!text){ haptic.error(); return alert("의견을 입력해주세요!"); }
 
-  // ✅ 즉시 “감사합니다” 토스트 표시 + 하단 스크롤 고정
+  // 즉시 “감사합니다” 토스트 표시 + 하단 스크롤 고정
   const toast = document.getElementById("thanksToast");
   toast.style.display = "block";
   requestAnimationFrame(()=>{
@@ -382,9 +406,7 @@ async function submitReview(){
     await fetch(`${SCRIPT_URL}?action=review&type=${encodeURIComponent(selectedType)}&level=${encodeURIComponent(selectedLevel)}&review=${encodeURIComponent("["+satisfaction+"] "+text)}&session=${encodeURIComponent(SESSION_ID)}`);
     saveLastSubmission();
     haptic.success();
-
-    // 완료 후 바로 홈 이동(홈에는 메시지 없음)
-    viewHome();
+    viewHome(); // 완료 후 홈으로
   }catch(e){
     haptic.error();
     alert("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
@@ -408,7 +430,7 @@ document.getElementById("backBtn").onclick = ()=>{
   }
 };
 
-/* ===== 하트 → 비밀번호(클라이언트 해시 비교) + 관리자 ===== */
+/* ===== 하트 → 비밀번호(해시 비교) + 관리자 ===== */
 const modal = document.getElementById("passwordModal"), pass = document.getElementById("adminPass");
 document.getElementById("heartBtn").onclick = ()=>{
   haptic.medium();
