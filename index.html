@@ -105,13 +105,21 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .bottom .button:hover{ transform:translateY(-1px); filter:brightness(1.03); }
 .bottom .button:active{ transform:translateY(0); filter:brightness(.97); }
 
-/* 하트 아이콘(SF Symbols 느낌) */
-.icon{
-  width:22px; height:22px; display:inline-block; vertical-align:middle;
-}
+/* 하트 아이콘(SF Symbols 느낌, 아웃라인) */
+.icon{ width:22px; height:22px; display:inline-block; vertical-align:middle; }
 .icon svg{ width:100%; height:100%; display:block; }
 .icon svg path{
-  fill:#fff; stroke:#ffffff; stroke-width:1.2; /* 흰 채움 + 얇은 외곽 */
+  fill: none;              /* 중앙 뚫림 */
+  stroke: #ffffff;         /* 흰색 윤곽선 */
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke .18s var(--ease), stroke-width .18s var(--ease), transform .18s var(--ease);
+}
+/* 하단 버튼 호버 시 아이콘만 살짝 강조 */
+.bottom .button:hover .icon svg path{
+  stroke:#f2f2f2;
+  stroke-width: 2.0;
 }
 
 /* 추천 카드 → 박스색 + 흰 글자 */
@@ -187,11 +195,11 @@ textarea{ width:100%; max-width:100%; border:1px solid #dcdcdc; background:#fff;
     <div class="bottom" role="group" aria-label="하단 도구">
       <button class="button" id="backBtn"  aria-label="되돌아가기" title="되돌아가기">←</button>
       <button class="button" id="homeBtn"  aria-label="처음으로"   title="처음으로">⌂</button>
-      <!-- ✅ 하트: SF Symbols 느낌의 흰색 아이콘(SVG) -->
+      <!-- ✅ 아웃라인 하트(SVG) -->
       <button class="button" id="heartBtn" aria-label="관리자" title="관리자">
         <span class="icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" focusable="false">
-            <path d="M12.0 21.0c-.3 0-.6-.1-.8-.3C8.4 18.3 3 14.2 3 9.3 3 6.6 5.2 4.5 7.8 4.5c1.5 0 2.9.7 3.9 1.8 1-1.1 2.4-1.8 3.9-1.8 2.6 0 4.8 2.1 4.8 4.8 0 4.9-5.4 9-8.2 11.4-.2.2-.5.3-.8.3z"/>
+            <path d="M12 20.8C12 20.8 5 15.5 5 9.5C5 6.9 7 5 9.5 5C11 5 12.3 5.8 13 7C13.7 5.8 15 5 16.5 5C19 5 21 6.9 21 9.5C21 15.5 14 20.8 14 20.8C13.4 21.2 12.6 21.2 12 20.8Z"/>
           </svg>
         </span>
       </button>
