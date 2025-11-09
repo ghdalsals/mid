@@ -5,55 +5,61 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>문제집 추천 알고리즘</title>
 <style>
-/* 좌우 스크롤 차단 & 박스사이징 통일 */
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow-x:hidden;-webkit-text-size-adjust:100%}
-
-/* 모노톤 Apple-like 토큰 */
 :root{
   --bg:#ffffff; --fg:#1d1d1f; --muted:#6e6e73; --line:#d2d2d7; --elev:#f5f5f7;
-  --cta:#1d1d1f;  /* 모노톤 포인트(검정) */
-  --radius:20px; --space:22px; --shadow:0 14px 40px rgba(0,0,0,.08);
+  --cta:#1d1d1f; --radius:20px; --space:22px; --shadow:0 14px 40px rgba(0,0,0,.08);
   --ease:cubic-bezier(.25,.46,.45,.94); --speed:.28s;
 }
-
 body{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Noto Sans KR",system-ui,Segoe UI,Roboto,sans-serif;
   color:var(--fg); background:var(--bg);
   display:flex;align-items:center;justify-content:center;
   padding: clamp(18px, 4vw, 36px);
 }
-
-/* 앱 카드 */
-.chat{ width:min(480px,94vw); height:min(680px,92vh); background:#fff; border:1px solid var(--line);
+.chat{ width:min(480px,94vw); height:min(700px,92vh); background:#fff; border:1px solid var(--line);
   border-radius:var(--radius); box-shadow:var(--shadow);
   display:flex; flex-direction:column; overflow:hidden; transition:opacity .6s var(--ease) }
 .fade-out{opacity:0;pointer-events:none}
-
 .header{ padding: calc(var(--space) - 4px) var(--space) var(--space); border-bottom:1px solid var(--line) }
 .title{ margin:0; font-size:22px; font-weight:600; letter-spacing:-.02em; text-align:center }
-
-/* 본문 */
 #chat-content{ flex:1; padding: var(--space); overflow-y:auto; overflow-x:hidden; scroll-behavior:smooth }
 h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .p{margin:0; color:var(--muted); font-size:16.5px}
 
-/* 버튼 */
-.button{ display:block; width:100%; border:1px solid var(--line); background:var(--elev); color:var(--fg);
+/* 텍스트 버튼(상단 선택용) */
+.button{
+  display:block; width:100%; border:1px solid var(--line); background:var(--elev); color:var(--fg);
   border-radius:14px; padding:14px 16px; font-size:17px; font-weight:600; letter-spacing:-.01em; margin:10px 0;
-  transition:transform var(--speed) var(--ease), filter var(--speed) var(--ease), background var(--speed) var(--ease); cursor:pointer }
+  transition:transform var(--speed) var(--ease), filter var(--speed) var(--ease), background var(--speed) var(--ease); cursor:pointer
+}
 .button:hover{ transform:translateY(-1px); filter:brightness(1.02) }
 .button:active{ transform:translateY(0); filter:brightness(.98) }
 .button.cta{ background:var(--cta); color:#fff; border-color:var(--cta) }
 
-/* 하단바: 3버튼 균등 */
-.bottom{ display:flex; gap:10px; padding: var(--space); border-top:1px solid var(--line) }
-.bottom .button{ margin:0; flex:1; min-width:0 }
+/* 하단 아이콘 버튼바 */
+.bottom{ display:flex; gap:14px; padding: var(--space); border-top:1px solid var(--line); justify-content:center }
+.iconbtn{
+  width:56px; height:56px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--elev); border:1px solid var(--line); color:var(--fg);
+  font-size:22px; cursor:pointer;
+  transition:transform var(--speed) var(--ease), filter var(--speed) var(--ease), background var(--speed) var(--ease)
+}
+.iconbtn:hover{ transform:translateY(-1px); filter:brightness(1.02) }
+.iconbtn:active{ transform:translateY(0); filter:brightness(.98) }
 
-/* 카드형 아이템(추천 리스트) */
-.card{ background:var(--elev); border:1px solid var(--line); border-radius:14px; padding:10px 12px; font-size:16px; margin:8px 0 }
+/* 클릭 가능한 추천 카드 */
+.card{
+  background:var(--elev); border:1px solid var(--line); border-radius:14px;
+  padding:12px 14px; font-size:16px; margin:8px 0; cursor:pointer;
+  transition:transform .2s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease)
+}
+.card:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.06) }
+.card:active{ transform:scale(.99) }
 
-/* 만족도(라디오+라벨) */
+/* 만족도 라디오 */
 .rating{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:12px; justify-items:center; align-items:center }
 .rating input{ position:absolute; opacity:0; width:0; height:0 }
 .emoji{ font-size:2.2rem; line-height:1; display:inline-block; cursor:pointer; transform:scale(1);
@@ -66,7 +72,7 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#fff; border-radius:12px;
   padding:12px; font-size:16px; line-height:1.5; resize:none; color:var(--fg) }
 
-/* 비밀번호 모달(모노톤, 좌우대칭 버튼, Enter=확인) */
+/* 비밀번호 모달 */
 .modal{ position:fixed; inset:0; display:none; background:rgba(0,0,0,.4); align-items:center; justify-content:center; padding:16px }
 .modal-box{ width:min(380px,94vw); background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px }
 .modal h4{ margin:0 0 12px 0; font-size:18px; text-align:center; font-weight:600 }
@@ -78,13 +84,13 @@ textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#
 <body>
   <div class="chat" id="chatBox">
     <div class="header"><h1 class="title">문제집 추천 알고리즘</h1></div>
-
     <div id="chat-content"></div>
 
-    <div class="bottom">
-      <button class="button" id="backBtn">← 되돌아가기</button>
-      <button class="button" id="homeBtn">⌂ 처음으로</button>
-      <button class="button" id="heartBtn">💖</button>
+    <!-- 아이콘만 있는 하단바 -->
+    <div class="bottom" role="group" aria-label="하단 도구">
+      <button class="iconbtn" id="backBtn"  aria-label="되돌아가기" title="되돌아가기">←</button>
+      <button class="iconbtn" id="homeBtn"  aria-label="처음으로"   title="처음으로">⌂</button>
+      <button class="iconbtn" id="heartBtn" aria-label="관리자"     title="관리자">💖</button>
     </div>
   </div>
 
@@ -102,11 +108,11 @@ textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#
 
 <script>
 /* ===== 설정 ===== */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwzT8R_3RBSfBZvxovrYzdDw9Uk1And-2aNC4WJzYnZhPNfHNcEomJEPgngMfaWzpFB/exec";
-/* 평문 대신 SHA-256 해시만 코드에 보관 (비번 0411의 해시) */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4olBRgz5gDV09jR1L3hmpTy1s04Hqlw5elF2uQmw5_H95x0LUjBKhGEiJhe0iQKrW/exec";
+/* 평문 대신 SHA-256 해시만 코드에 저장 (비번 0411 해시) */
 const ADMIN_PW_SHA256 = "d20bdc364b3d7dfdcd81be5a3fd192d0f513fa79e92463bf0ed9efd2f46c243b";
 
-/* ===== 세션 및 방문 로그 ===== */
+/* ===== 세션 & 방문 ===== */
 if(!localStorage.getItem("sessionId")) localStorage.setItem("sessionId","sess-"+Math.random().toString(36).slice(2,11));
 const SESSION_ID = localStorage.getItem("sessionId");
 fetch(`${SCRIPT_URL}?action=visit&session=${encodeURIComponent(SESSION_ID)}`).catch(()=>{});
@@ -129,16 +135,14 @@ const data = {
   "기출": ["자이스토리","짱 어려운 유형 고난도 4점짜리 수학","너희들의 기출문제","마플 수능기출총정리","수능 기출의 바이블","실전+수능 고쟁이","어삼쉬사","너기출","수능 기출의 미래","쎈 기출","티오피 클래스 수능 기출문제집","이동훈 기출문제집","담금질","백미","기출의 고백","마더텅","올림포스 기출문제집"]
 };
 
-/* ===== 상태 ===== */
+/* ===== 상태 & 유틸 ===== */
 let satisfaction = "", selectedType = "", selectedLevel = "", currentPage = "home";
-
-/* ===== 유틸 ===== */
 const $ = id => document.getElementById(id);
 const chat = () => $("chat-content");
 const scrollTop = () => { chat().scrollTop=0; };
 const scrollBottom = () => { chat().scrollTop=chat().scrollHeight; };
 
-/* ===== 화면 렌더링 ===== */
+/* ===== 화면 ===== */
 function viewHome(){
   currentPage="home"; satisfaction="";
   chat().innerHTML = `
@@ -150,39 +154,49 @@ function viewHome(){
     </div>`;
   scrollTop();
 }
-
 function viewType(t){
   currentPage="type"; selectedType=t;
-  // 선택 로그
   fetch(`${SCRIPT_URL}?action=select&type=${encodeURIComponent(t)}&session=${encodeURIComponent(SESSION_ID)}`).catch(()=>{});
   if(t==="개념서"){
     chat().innerHTML = `<h3>${t} 난이도를 선택하세요</h3>` + [1,2,3,4].map(i=>`<button class="button" onclick="viewResult(${i})">${i}단계</button>`).join('');
   }else if(t==="유형 심화서"){
     chat().innerHTML = `<h3>${t} 난이도를 선택하세요</h3>` + [1,2,3,4,5].map(i=>`<button class="button" onclick="viewResult(${i})">${i}단계</button>`).join('');
-  }else{ // 기출
-    viewResult();
-  }
+  }else{ viewResult(); }
   scrollTop();
 }
-
 function viewResult(lv){
   currentPage="result"; selectedLevel=lv||""; satisfaction="";
-  // 난이도 선택 로그(기출은 level 미전송)
   if(selectedType!=="기출"){
     fetch(`${SCRIPT_URL}?action=select&type=${encodeURIComponent(selectedType)}&level=${encodeURIComponent(selectedLevel)}&session=${encodeURIComponent(SESSION_ID)}`).catch(()=>{});
   }
   const books = (selectedType==="기출")? data["기출"] : data[selectedType][selectedLevel];
+
   chat().innerHTML = `
     <div>
       <h3>추천 문제집</h3>
-      ${books.map(b=>`<div class="card">${b}</div>`).join('')}
+      <div id="bookList"></div>
       <button class="button cta" id="evalBtn">평가하기</button>
     </div>`;
+  const listEl = document.getElementById("bookList");
+  listEl.innerHTML = books.map((b,i)=>`<div class="card" data-book="${b}" tabindex="0" role="button" aria-label="${b}">${i+1}. ${b}</div>`).join('');
+
+  // 카드 클릭/엔터 시 클릭 로그
+  listEl.querySelectorAll(".card").forEach(el=>{
+    const book = el.getAttribute("data-book");
+    const logClick = ()=>{
+      fetch(`${SCRIPT_URL}?action=book&type=${encodeURIComponent(selectedType)}&level=${encodeURIComponent(selectedLevel)}&book=${encodeURIComponent(book)}&session=${encodeURIComponent(SESSION_ID)}`).catch(()=>{});
+      el.style.background = "#eee";
+      setTimeout(()=>{ el.style.background = ""; }, 250);
+    };
+    el.addEventListener("click", logClick);
+    el.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); logClick(); }});
+  });
+
   $("evalBtn").onclick = openEvaluation;
   scrollTop();
 }
 
-/* ===== 평가 영역 ===== */
+/* ===== 평가 ===== */
 function openEvaluation(){
   if($("evalSection")){ $("evalSection").scrollIntoView({behavior:'smooth',block:'start'}); return; }
   chat().insertAdjacentHTML('beforeend', `
@@ -205,10 +219,9 @@ function openEvaluation(){
   const pulse=id=>{ const l=document.querySelector(`label[for="${id}"]`); l.classList.remove('pulse'); void l.offsetWidth; l.classList.add('pulse'); };
   radios.forEach(r=>{ r.addEventListener('change',e=>{ satisfaction=e.target.value; pulse(e.target.id); }); });
   document.querySelectorAll('.emoji').forEach(l=>{ l.addEventListener('click',()=>{ const id=l.getAttribute('for'); setTimeout(()=>pulse(id),0); }); });
-  scrollBottom(); // 평가 열면 하단으로
+  scrollBottom();
 }
 
-/* 제출 → fade-out 후 홈 */
 async function submitReview(){
   const text = ($("reviewText")?.value||"").trim();
   if(!satisfaction) return alert("만족도를 먼저 선택해주세요!");
@@ -220,7 +233,7 @@ async function submitReview(){
   setTimeout(()=>{ box.classList.remove('fade-out'); viewHome(); },600);
 }
 
-/* ===== 하단 버튼 ===== */
+/* ===== 하단 아이콘 버튼 동작 ===== */
 $("homeBtn").onclick = ()=>viewHome();
 $("backBtn").onclick = ()=>{
   if(selectedType==="기출"){ viewHome(); return; }
@@ -234,35 +247,24 @@ $("heartBtn").onclick = ()=>{ modal.style.display="flex"; pass.value=""; pass.fo
 $("pwCancelBtn").onclick = ()=>{ modal.style.display="none"; };
 $("pwConfirmBtn").onclick = checkPassword;
 pass.addEventListener('keydown',e=>{ if(e.key==="Enter"){ e.preventDefault(); checkPassword(); } });
-
-/* SHA-256 유틸 */
 function buf2hex(buf){ return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
-
 async function checkPassword(){
-  const raw = pass.value;
-  if(!raw){ alert("비밀번호를 입력하세요."); return; }
+  const raw = pass.value; if(!raw){ alert("비밀번호를 입력하세요."); return; }
   const enc = new TextEncoder().encode(raw);
   const digest = await crypto.subtle.digest("SHA-256", enc);
   const hex = buf2hex(digest);
-  if(hex === ADMIN_PW_SHA256){
-    modal.style.display="none";
-    loadAdmin(); // 관리자 화면 로드
-  }else{
-    alert("잘못된 비밀번호입니다.");
-  }
+  if(hex === ADMIN_PW_SHA256){ modal.style.display="none"; loadAdmin(); }
+  else alert("잘못된 비밀번호입니다.");
 }
 
-/* ===== 관리자 화면: 방문자 수 + 최근 리뷰 ===== */
+/* ===== 관리자: 방문/고유/클릭 통계 + 최근 리뷰 ===== */
 async function loadAdmin(){
   try{
     const stats = await fetch(`${SCRIPT_URL}?action=stats`).then(r=>r.json());
     const reviews = await fetch(`${SCRIPT_URL}?action=read`).then(r=>r.json());
     renderAdmin(stats, reviews);
-  }catch(e){
-    alert("관리자 데이터를 불러오지 못했습니다.");
-  }
+  }catch(e){ alert("관리자 데이터를 불러오지 못했습니다."); }
 }
-
 function renderAdmin(stats, reviews){
   chat().innerHTML = `
     <div>
@@ -270,6 +272,7 @@ function renderAdmin(stats, reviews){
       <div class="card" style="display:flex;gap:12px;justify-content:space-between;align-items:center">
         <div><b>총 방문</b><br><span class="p">${Number(stats?.visits||0).toLocaleString()}</span></div>
         <div><b>고유 사용자</b><br><span class="p">${Number(stats?.uniqueSessions||0).toLocaleString()}</span></div>
+        <div><b>문제집 클릭</b><br><span class="p">${Number(stats?.clicks||0).toLocaleString()}</span></div>
       </div>
       <div style="margin-top:8px">
         ${reviews.slice(-12).reverse().map(r=>`
