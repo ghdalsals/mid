@@ -1,46 +1,181 @@
-<script>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>문제집 추천 알고리즘</title>
+<style>
+:root {
+  --bg-main: #FFFFFF;
+  --bg-box: #F4F4F4;
+  --btn-bg: #333333;
+  --btn-hover: #111111;
+  --text-main: #111111;
+  --text-light: #FFFFFF;
+  --radius: 14px;
+}
+
+body {
+  background-color: var(--bg-main);
+  font-family: 'Noto Sans KR', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.chat-container {
+  background-color: var(--bg-box);
+  width: 420px;
+  height: 600px;
+  border-radius: 24px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+#chat-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  font-size: 1rem;
+}
+
+.button {
+  background-color: var(--btn-bg);
+  color: var(--text-light);
+  border: none;
+  border-radius: var(--radius);
+  padding: 10px 15px;
+  margin: 8px 0;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s ease;
+  box-sizing: border-box;
+}
+
+.button:hover { background-color: var(--btn-hover); }
+.button:active { transform: scale(0.97); }
+
+.bottom-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* 넘패드 */
+#numpad {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.numpad-container {
+  background-color: var(--bg-box);
+  padding: 20px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#numpad-display {
+  background-color: #fff;
+  color: #000;
+  font-size: 1.4rem;
+  text-align: center;
+  width: 180px;
+  padding: 8px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.numpad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 60px);
+  grid-gap: 10px;
+}
+
+.numpad-button {
+  background-color: var(--btn-bg);
+  color: var(--text-light);
+  font-size: 1.2rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.numpad-button:active { opacity: 0.8; transform: scale(0.96); }
+</style>
+</head>
+
+<body>
+  <div class="chat-container">
+    <div id="chat-content"></div>
+
+    <div class="bottom-bar">
+      <button class="button" id="backBtn">🔙 뒤로가기</button>
+      <button class="button" id="homeBtn">🏠 처음으로</button>
+      <button class="button" id="heartBtn">💖</button>
+    </div>
+  </div>
+
+  <!-- 넘패드 -->
+  <div id="numpad">
+    <div class="numpad-container">
+      <div id="numpad-display"></div>
+      <div class="numpad-grid">
+        <button class="numpad-button">1</button>
+        <button class="numpad-button">2</button>
+        <button class="numpad-button">3</button>
+        <button class="numpad-button">4</button>
+        <button class="numpad-button">5</button>
+        <button class="numpad-button">6</button>
+        <button class="numpad-button">7</button>
+        <button class="numpad-button">8</button>
+        <button class="numpad-button">9</button>
+        <button class="numpad-button">0</button>
+        <button class="numpad-button" id="clearBtn">Clear</button>
+        <button class="numpad-button" id="enterBtn">Enter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ JS는 마지막에 실행 -->
+  <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrC2UrWD0QeYKU4q7bnst9Jo7y26E7Jpg2H7II2hSHHAaIcKtdkXdG0hJWwKBXS32b/exec";
 
-// 📌 익명 사용자 세션 ID 생성 (브라우저별 고유값)
+// 세션 ID (브라우저별 고유값)
 if (!localStorage.getItem("sessionId")) {
   localStorage.setItem("sessionId", "sess-" + Math.random().toString(36).substr(2, 9));
 }
 const SESSION_ID = localStorage.getItem("sessionId");
 
-// 🧍 방문자 로그 저장
+// 방문자 기록
 fetch(`${SCRIPT_URL}?action=visit&session=${SESSION_ID}`);
 
 const data = {
-  "개념서": {
-    1: ["수학의 바이블","마플 교과서","수학의 왕도","올림포스 수학","개념 플러스 유형 고등 수학","이유있는 수학 개념 SOS","셀파 해법수학"],
-    2: ["수학의 샘","개념 쎈","풍산자","개념원리"],
-    3: ["기본 수학의 정석","수학중심 고등수학","메가스터디 문제 기본서 CPR수학","더 개념 블랙라벨"],
-    4: ["실력 수학의 정석","숨마쿰라우데"]
-  },
-  "유형 심화서": {
-    1: ["수력충전","수학의 바이블 BOB","개념 플러스 유형 라이트","라이트 쎈","유형 해결의 법칙","올림포스 닥터링"],
-    2: ["개념원리 RPM","풍산자 필수유형","내공의 힘","올리드","하이라이트 단기 특강","심플 자이스토리"],
-    3: ["쎈 수학","마플 시너지","일등급 수학","1등급 만들기"],
-    4: ["일품","울림포스 고난도","수능다큐","절대등급","유형+내신 고쟁이","블랙라벨","내신 하이앤드","현우진 뉴런-시냅스","수학의 신"],
-    5: ["TOT","531 하이퍼","절대등급 코드엠","현우진 드릴"]
-  },
+  "개념서": {1:["수학의 바이블","마플 교과서","수학의 왕도","올림포스 수학","개념 플러스 유형 고등 수학","이유있는 수학 개념 SOS","셀파 해법수학"],2:["수학의 샘","개념 쎈","풍산자","개념원리"],3:["기본 수학의 정석","수학중심 고등수학","메가스터디 문제 기본서 CPR수학","더 개념 블랙라벨"],4:["실력 수학의 정석","숨마쿰라우데"]},
+  "유형 심화서": {1:["수력충전","수학의 바이블 BOB","개념 플러스 유형 라이트","라이트 쎈","유형 해결의 법칙","올림포스 닥터링"],2:["개념원리 RPM","풍산자 필수유형","내공의 힘","올리드","하이라이트 단기 특강","심플 자이스토리"],3:["쎈 수학","마플 시너지","일등급 수학","1등급 만들기"],4:["일품","울림포스 고난도","수능다큐","절대등급","유형+내신 고쟁이","블랙라벨","내신 하이앤드","현우진 뉴런-시냅스","수학의 신"],5:["TOT","531 하이퍼","절대등급 코드엠","현우진 드릴"]},
   "기출": ["자이스토리","짱 어려운 유형 고난도 4점짜리 수학","너희들의 기출문제","마플 수능기출총정리","수능 기출의 바이블","실전+수능 고쟁이","어삼쉬사","너기출","수능 기출의 미래","쎈 기출","티오피 클래스 수능 기출문제집","이동훈 기출문제집","담금질","백미","기출의 고백","마더텅","올림포스 기출문제집"]
 };
 
 let currentPage = "home";
-let selectedType = "";
-let selectedLevel = "";
-let numpadCode = "";
+let selectedType = "", selectedLevel = "", numpadCode = "";
 
-// 📜 화면 초기화
 function scrollTopReset() {
   document.getElementById("chat-content").scrollTop = 0;
 }
 
 function loadHome() {
-  currentPage = "home";
-  selectedType = "";
-  selectedLevel = "";
+  currentPage = "home"; selectedType = ""; selectedLevel = "";
   const chat = document.getElementById("chat-content");
   chat.innerHTML = `
     <div class="fade">
@@ -48,38 +183,28 @@ function loadHome() {
       <button class="button" onclick="selectType('개념서')">개념서</button>
       <button class="button" onclick="selectType('유형 심화서')">유형 심화서</button>
       <button class="button" onclick="selectType('기출')">기출</button>
-    </div>
-  `;
+    </div>`;
   scrollTopReset();
 }
 
 function selectType(type) {
   selectedType = type;
-  fetch(`${SCRIPT_URL}?action=select&type=${type}&session=${SESSION_ID}`); // 선택 로그 전송
-
-  currentPage = "level";
+  fetch(`${SCRIPT_URL}?action=select&type=${type}&session=${SESSION_ID}`);
   const chat = document.getElementById("chat-content");
-
-  if (type === "개념서") {
-    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` +
-      [1,2,3,4].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
-  } else if (type === "유형 심화서") {
-    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` +
-      [1,2,3,4,5].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
-  } else {
-    showRecommend();
-  }
+  if (type === "개념서")
+    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` + [1,2,3,4].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
+  else if (type === "유형 심화서")
+    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` + [1,2,3,4,5].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
+  else showRecommend();
+  currentPage = "level";
   scrollTopReset();
 }
 
 function showRecommend(level) {
   selectedLevel = level || "";
-  fetch(`${SCRIPT_URL}?action=select&type=${selectedType}&level=${selectedLevel}&session=${SESSION_ID}`); // 난이도 선택 로그 전송
-
-  currentPage = "result";
+  fetch(`${SCRIPT_URL}?action=select&type=${selectedType}&level=${selectedLevel}&session=${SESSION_ID}`);
   const chat = document.getElementById("chat-content");
-  let books = selectedType === "기출" ? data["기출"] : data[selectedType][selectedLevel];
-
+  const books = selectedType === "기출" ? data["기출"] : data[selectedType][selectedLevel];
   chat.innerHTML = `
     <div class="fade">
       <h3>추천 문제집 목록</h3>
@@ -87,8 +212,8 @@ function showRecommend(level) {
         ${books.map(b => `<li style="margin:6px 0; background:#fff; border-radius:10px; padding:6px 10px;">${b}</li>`).join('')}
       </ul>
       <button class="button" onclick="openReviewInput()">평가하기</button>
-    </div>
-  `;
+    </div>`;
+  currentPage = "result";
   scrollTopReset();
 }
 
@@ -98,39 +223,30 @@ function openReviewInput() {
     <div class="fade" id="reviewBox">
       <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..." style="width:100%; box-sizing:border-box; border-radius:10px; padding:8px; border:1px solid #ccc; margin-top:8px; background:#fafafa;"></textarea>
       <button class="button" style="width:100%;" onclick="submitReview()">제출</button>
-    </div>
-  `;
+    </div>`;
   scrollTopReset();
 }
 
 async function submitReview() {
   const text = document.getElementById("reviewText").value.trim();
   if (!text) return alert("평가 내용을 입력해주세요!");
-
-  // 리뷰 전송
   await fetch(`${SCRIPT_URL}?action=review&type=${selectedType}&level=${selectedLevel}&review=${encodeURIComponent(text)}&session=${SESSION_ID}`);
   alert("평가가 제출되었습니다!");
   loadHome();
 }
 
-// ❤️ 넘패드 (비밀번호 0411 입력 시 리뷰 열람)
+// 💖 넘패드 비밀번호
 document.getElementById("heartBtn").addEventListener("click", () => {
   document.getElementById("numpad").style.display = "flex";
-  numpadCode = "";
-  document.getElementById("numpad-display").textContent = "";
+  numpadCode = ""; document.getElementById("numpad-display").textContent = "";
 });
 
 document.querySelectorAll(".numpad-button").forEach(btn => {
   btn.addEventListener("click", e => {
     const val = e.target.textContent;
-    if (val === "Clear") {
-      numpadCode = "";
-      document.getElementById("numpad-display").textContent = "";
-    } else if (val === "Enter") checkCode();
-    else {
-      numpadCode += val;
-      document.getElementById("numpad-display").textContent = numpadCode;
-    }
+    if (val === "Clear") numpadCode = "", document.getElementById("numpad-display").textContent = "";
+    else if (val === "Enter") checkCode();
+    else numpadCode += val, document.getElementById("numpad-display").textContent = numpadCode;
   });
 });
 
@@ -151,13 +267,12 @@ async function loadReviews() {
         <b>${r.type}</b> ${r.level ? `${r.level}단계` : ""}<br>
         ${r.review}<br>
         <small>${r.datetime}</small>
-      </div>
-    `;
+      </div>`;
   });
   scrollTopReset();
 }
 
-// 🔙 뒤로가기 / 🏠 처음으로
+// 버튼 기능
 document.getElementById("homeBtn").addEventListener("click", loadHome);
 document.getElementById("backBtn").addEventListener("click", () => {
   if (currentPage === "level") loadHome();
@@ -165,6 +280,8 @@ document.getElementById("backBtn").addEventListener("click", () => {
   else loadHome();
 });
 
-// 🚀 시작 시 홈화면 로드
+// 첫 실행
 loadHome();
-</script>
+  </script>
+</body>
+</html>
