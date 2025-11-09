@@ -15,12 +15,12 @@ html,body{height:100%;margin:0;overflow-x:hidden;-webkit-text-size-adjust:100%}
   --card-anim:160ms;
 
   /* 박스/CTA/선택 색 */
-  --box:#b8c099;          /* ✅ 변경: 유형/난이도/미선택 카드 + 기본 버튼 + 모달 박스 */
-  --box-border:#aaa682;   /* 박스 경계(살짝 어둡게) */
+  --box:#b8c099;          /* 카드/기본 버튼/모달/토스트 */
+  --box-border:#aaa682;
   --cta:#899656;          /* 평가하기/제출 */
   --cta-hover:#7d8a4e;
   --cta-active:#6f7b45;
-  --selected:#a0ab77;     /* 선택된 카드 */
+  --selected:#a0ab77;     /* 선택 카드 */
   --selected-border:#8f9b63;
 
   /* 하단 버튼 전용 */
@@ -61,7 +61,7 @@ body{
 .header{ padding: calc(var(--space) - 4px) var(--space) var(--space); border-bottom:1px solid #ededf0 }
 .title{ margin:0; font-size:22px; font-weight:600; letter-spacing:-.02em; text-align:center }
 
-/* 스크롤 컨테이너 + 부드러운 스크롤 */
+/* 스크롤 컨테이너 */
 #chat-content{
   flex:1; padding: var(--space); overflow-y:auto; overflow-x:hidden;
   scroll-behavior: smooth;
@@ -70,19 +70,27 @@ body{
 h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .p{margin:0; color:var(--muted); font-size:16.5px}
 
+/* ✅ 박스 내부 폰트 두께 통일(600) */
+.button, .button * ,
+.card, .card * ,
+.modal-box, .modal-box * ,
+.toast, .toast * { font-weight:600; }
+.button b, .button strong,
+.card b, .card strong,
+.modal-box b, .modal-box strong,
+.toast b, .toast strong { font-weight: inherit; }
+
 /* 버튼(기본) → 박스색 + 흰색 글자 */
 .button{
   display:block; width:100%; border:1px solid var(--box-border); background:var(--box); color:#fff;
-  border-radius:14px; padding:14px 16px; font-size:17px; font-weight:600; letter-spacing:-.01em; margin:10px 0;
+  border-radius:14px; padding:14px 16px; font-size:17px; letter-spacing:-.01em; margin:10px 0;
   cursor:pointer; transition:transform var(--speed) var(--ease), filter var(--speed) var(--ease)
 }
 .button:hover{ transform:translateY(-1px); filter:brightness(1.02) }
 .button:active{ transform:translateY(0); filter:brightness(.98) }
 
 /* CTA(평가하기/제출) — #899656 + 흰색 */
-.button.cta{
-  background:var(--cta); color:#fff; border-color:#7a8650;
-}
+.button.cta{ background:var(--cta); color:#fff; border-color:#7a8650; }
 .button.cta:hover{ background:var(--cta-hover); transform:translateY(-1px) }
 .button.cta:active{ background:var(--cta-active); transform:translateY(0) }
 
@@ -97,7 +105,16 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .bottom .button:hover{ transform:translateY(-1px); filter:brightness(1.03); }
 .bottom .button:active{ transform:translateY(0); filter:brightness(.97); }
 
-/* 추천 카드 → 박스색 + 흰색 글자 */
+/* 하트 아이콘(SF Symbols 느낌) */
+.icon{
+  width:22px; height:22px; display:inline-block; vertical-align:middle;
+}
+.icon svg{ width:100%; height:100%; display:block; }
+.icon svg path{
+  fill:#fff; stroke:#ffffff; stroke-width:1.2; /* 흰 채움 + 얇은 외곽 */
+}
+
+/* 추천 카드 → 박스색 + 흰 글자 */
 .card{
   background:var(--box); border:1px solid var(--box-border); border-radius:14px;
   padding:12px 14px; font-size:16px; margin:8px 0; cursor:pointer; color:#fff;
@@ -111,9 +128,7 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 }
 .card:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.06) }
 .card:active{ transform:scale(.99) }
-/* 짧은 클릭 피드백 */
 .card.clicked{ filter:brightness(.97); }
-/* 선택 상태 → 선택색 + 흰색 */
 .card.selected{
   background:var(--selected);
   border-color:var(--selected-border);
@@ -135,11 +150,9 @@ textarea{ width:100%; max-width:100%; border:1px solid #dcdcdc; background:#fff;
 
 /* 비밀번호 모달(관리자 진입 전) */
 .modal{ position:fixed; inset:0; display:none; background:rgba(0,0,0,.4); align-items:center; justify-content:center; padding:16px }
-
-/* 모달 상자: 박스색 + 흰 텍스트 */
 .modal-box{
   width:min(420px,94vw);
-  background: var(--box);
+  background: var(--box); /* #b8c099 */
   color: #fff;
   border:1px solid var(--box-border);
   border-radius:16px;
@@ -156,10 +169,13 @@ textarea{ width:100%; max-width:100%; border:1px solid #dcdcdc; background:#fff;
 .modal-row{ display:flex; gap:10px; margin-top:12px }
 .modal-row .button{ margin:0; flex:1 } /* 취소=box색 흰글자 / 확인=cta */
 
-/* 토스트 */
+/* ✅ 토스트: 박스색 + 흰 글자 */
 .toast{
-  margin-top:10px; text-align:center; font-weight:600;
-  background:#f5f5f7; border:1px solid #e6e6ea; border-radius:10px; padding:10px;
+  margin-top:10px; text-align:center;
+  background: var(--box);
+  color:#fff;
+  border:1px solid var(--box-border);
+  border-radius:10px; padding:10px;
 }
 </style>
 </head>
@@ -171,7 +187,14 @@ textarea{ width:100%; max-width:100%; border:1px solid #dcdcdc; background:#fff;
     <div class="bottom" role="group" aria-label="하단 도구">
       <button class="button" id="backBtn"  aria-label="되돌아가기" title="되돌아가기">←</button>
       <button class="button" id="homeBtn"  aria-label="처음으로"   title="처음으로">⌂</button>
-      <button class="button" id="heartBtn" aria-label="관리자"     title="관리자">💖</button>
+      <!-- ✅ 하트: SF Symbols 느낌의 흰색 아이콘(SVG) -->
+      <button class="button" id="heartBtn" aria-label="관리자" title="관리자">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M12.0 21.0c-.3 0-.6-.1-.8-.3C8.4 18.3 3 14.2 3 9.3 3 6.6 5.2 4.5 7.8 4.5c1.5 0 2.9.7 3.9 1.8 1-1.1 2.4-1.8 3.9-1.8 2.6 0 4.8 2.1 4.8 4.8 0 4.9-5.4 9-8.2 11.4-.2.2-.5.3-.8.3z"/>
+          </svg>
+        </span>
+      </button>
     </div>
   </div>
 
@@ -360,6 +383,7 @@ function openEvaluation(){
       <div style="margin-top:12px">
         <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
         <button class="button cta" style="margin-top:10px" id="submitBtn">제출</button>
+        <!-- ✅ 토스트: 박스색(#b8c099) + 흰 글자 -->
         <div id="thanksToast" class="toast" style="display:none;">✅ 평가가 제출되었습니다. 감사합니다! 🙏</div>
       </div>
     </div>
@@ -497,22 +521,22 @@ async function loadAdmin(){
       <div>
         <h3>관리자 대시보드</h3>
         <div class="card" style="margin-bottom:10px">
-          <b>최근 제출 당시 선택한 문제집</b><br/>
-          <div class="p" style="margin-top:6px">${last.book}</div>
+          <span>최근 제출 당시 선택한 문제집</span><br/>
+          <span class="p" style="margin-top:6px;display:block">${last.book}</span>
           ${last.at ? `<small class="p">${new Date(last.at).toLocaleString()}</small>` : ``}
         </div>
 
         <div class="card" style="display:flex;gap:12px;justify-content:space-between;align-items:center">
-          <div><b>총 방문</b><br><span class="p">${Number(stats?.visits||0).toLocaleString()}</span></div>
-          <div><b>일일 방문</b><br><span class="p">${(typeof stats?.todayVisits!=="undefined"?Number(stats.todayVisits):0).toLocaleString()}</span></div>
-          <div><b>고유 사용자</b><br><span class="p">${Number(stats?.uniqueSessions||0).toLocaleString()}</span></div>
+          <div><span>총 방문</span><br><span class="p">${Number(stats?.visits||0).toLocaleString()}</span></div>
+          <div><span>일일 방문</span><br><span class="p">${todayVisits}</span></div>
+          <div><span>고유 사용자</span><br><span class="p">${Number(stats?.uniqueSessions||0).toLocaleString()}</span></div>
         </div>
 
         <div style="margin-top:8px">
           ${reviews.slice(-12).reverse().map(r=>`
             <div class="card">
-              <b>${r.type||''}</b> ${r.level?`${r.level}단계`:''}<br/>
-              ${r.review||''}<br/>
+              <span>${r.type||''}</span> ${r.level?`${r.level}단계`:''}<br/>
+              <span>${r.review||''}</span><br/>
               <small class="p">${r.datetime||''}${r.session?` · 세션:${r.session}`:''}</small>
             </div>
           `).join('')}
