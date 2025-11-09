@@ -81,6 +81,7 @@ const SCRIPT_URL="https://script.google.com/macros/s/AKfycbypbNF4_cfeeRuscpeg6Wc
 if(!localStorage.getItem("sessionId"))
   localStorage.setItem("sessionId","sess-"+Math.random().toString(36).slice(2,11));
 const SESSION_ID=localStorage.getItem("sessionId");
+
 fetch(`${SCRIPT_URL}?action=visit&session=${SESSION_ID}`);
 
 const data={
@@ -89,9 +90,10 @@ const data={
   "기출":["자이스토리","짱 어려운 유형 고난도 4점짜리 수학","너희들의 기출문제","마플 수능기출총정리","수능 기출의 바이블","실전+수능 고쟁이","어삼쉬사","너기출","수능 기출의 미래","쎈 기출","티오피 클래스 수능 기출문제집","이동훈 기출문제집","담금질","백미","기출의 고백","마더텅","올림포스 기출문제집"]
 };
 
-let satisfaction="",selectedType="",selectedLevel="";
+let satisfaction="",selectedType="",selectedLevel="",currentPage="home";
 
 function loadHome(){
+  currentPage="home";
   const c=document.getElementById("chat-content");
   c.innerHTML=`
     <div>
@@ -102,6 +104,7 @@ function loadHome(){
     </div>`;
 }
 function selectType(t){
+  currentPage="type";
   selectedType=t;
   const c=document.getElementById("chat-content");
   if(t==="개념서"){
@@ -111,6 +114,7 @@ function selectType(t){
   } else showRecommend();
 }
 function showRecommend(lv){
+  currentPage="result";
   selectedLevel=lv||"";
   const c=document.getElementById("chat-content");
   const books=(selectedType==="기출")?data["기출"]:data[selectedType][selectedLevel];
@@ -121,8 +125,8 @@ function showRecommend(lv){
       <button class="button" onclick="openSatisfaction()">평가하기</button>
     </div>`;
 }
-
 function openSatisfaction(){
+  if(document.getElementById("satisfactionBox")) return; // ✅ 중복 방지
   const chat=document.getElementById("chat-content");
   chat.innerHTML+=`
     <div id="satisfactionBox">
@@ -135,13 +139,14 @@ function openSatisfaction(){
         <span class="emoji" data-value="매우 만족">😍</span>
       </div>
     </div>`;
-  document.querySelectorAll(".emoji").forEach(el=>{
-    el.addEventListener("click",function(){
-      document.querySelectorAll(".emoji").forEach(e=>{e.classList.remove("selected","bounce");e.style.transform="scale(1)";});
-      void this.offsetHeight;
+  const emojis=document.querySelectorAll(".emoji");
+  emojis.forEach(e=>{
+    e.addEventListener("click",function(){
+      emojis.forEach(el=>el.classList.remove("selected","bounce"));
+      void this.offsetHeight; // 리플로우
       this.classList.add("selected","bounce");
       satisfaction=this.dataset.value;
-      if(navigator.vibrate) navigator.vibrate(40); // 🔔 진동 효과
+      if(navigator.vibrate) navigator.vibrate(40);
       if(!document.getElementById("reviewBox")){
         chat.innerHTML+=`
           <div id="reviewBox">
@@ -154,17 +159,20 @@ function openSatisfaction(){
   });
   chat.scrollTop=chat.scrollHeight;
 }
-
 async function submitReview(){
   const text=document.getElementById("reviewText").value.trim();
-  if(!text) return alert("의견을 입력해주세요!");
+  if(!text)return alert("의견을 입력해주세요!");
   await fetch(`${SCRIPT_URL}?action=review&type=${selectedType}&level=${selectedLevel}&review=${encodeURIComponent("["+satisfaction+"] "+text)}&session=${SESSION_ID}`);
   alert("평가가 제출되었습니다!");
   loadHome();
 }
-
-// 💖 관리자 모드: 하트 클릭 시 리뷰 보기
-document.getElementById("heartBtn").addEventListener("click",async()=>{
+document.getElementById("homeBtn").onclick=()=>loadHome();
+document.getElementById("backBtn").onclick=()=>{
+  if(currentPage==="result") selectType(selectedType);
+  else if(currentPage==="type"||currentPage==="review") loadHome();
+  else loadHome();
+};
+document.getElementById("heartBtn").onclick=async()=>{
   const res=await fetch(`${SCRIPT_URL}?action=read`);
   const reviews=await res.json();
   const c=document.getElementById("chat-content");
@@ -180,18 +188,15 @@ document.getElementById("heartBtn").addEventListener("click",async()=>{
       </div>`;
   });
   c.scrollTop=0;
-});
-
+};
 function calcAverage(arr){
   const map={불만족:1,"조금 불만족":2,보통:3,만족:4,"매우 만족":5};
   const vals=arr.map(t=>{
-    const key=t.match(/\[(.*?)\]/);
-    return key&&map[key[1]]?map[key[1]]:null;
+    const k=t.match(/\[(.*?)\]/);
+    return k&&map[k[1]]?map[k[1]]:null;
   }).filter(Boolean);
-  if(!vals.length) return "데이터 없음";
-  return (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+  return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):"데이터 없음";
 }
-
 loadHome();
 </script>
 </body>
