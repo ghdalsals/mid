@@ -15,8 +15,8 @@ html,body{height:100%;margin:0;overflow-x:hidden;-webkit-text-size-adjust:100%}
   --card-anim:160ms;
 
   /* 박스/CTA/선택 색 */
-  --box:#cfd5bb;          /* 유형/난이도/미선택 카드 + 일부 버튼(기본) */
-  --box-border:#b8c2a2;
+  --box:#b8c099;          /* ✅ 변경: 유형/난이도/미선택 카드 + 기본 버튼 + 모달 박스 */
+  --box-border:#aaa682;   /* 박스 경계(살짝 어둡게) */
   --cta:#899656;          /* 평가하기/제출 */
   --cta-hover:#7d8a4e;
   --cta-active:#6f7b45;
@@ -136,7 +136,7 @@ textarea{ width:100%; max-width:100%; border:1px solid #dcdcdc; background:#fff;
 /* 비밀번호 모달(관리자 진입 전) */
 .modal{ position:fixed; inset:0; display:none; background:rgba(0,0,0,.4); align-items:center; justify-content:center; padding:16px }
 
-/* 모달 상자: #cfd5bb + 흰 텍스트 */
+/* 모달 상자: 박스색 + 흰 텍스트 */
 .modal-box{
   width:min(420px,94vw);
   background: var(--box);
@@ -504,7 +504,7 @@ async function loadAdmin(){
 
         <div class="card" style="display:flex;gap:12px;justify-content:space-between;align-items:center">
           <div><b>총 방문</b><br><span class="p">${Number(stats?.visits||0).toLocaleString()}</span></div>
-          <div><b>일일 방문</b><br><span class="p">${todayVisits}</span></div>
+          <div><b>일일 방문</b><br><span class="p">${(typeof stats?.todayVisits!=="undefined"?Number(stats.todayVisits):0).toLocaleString()}</span></div>
           <div><b>고유 사용자</b><br><span class="p">${Number(stats?.uniqueSessions||0).toLocaleString()}</span></div>
         </div>
 
