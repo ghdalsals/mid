@@ -74,7 +74,6 @@ h3 {
 .button:hover {
   background-color: var(--btn-hover);
 }
-
 .button:active {
   background-color: var(--btn-active);
   transform: scale(0.98);
@@ -207,13 +206,15 @@ textarea {
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCJr7Bm1nFR0AqpM1ouhsfEZmyobDnp46Gmlzj1riDRcTXNiNu7XW8Ci5VnBOsfEKd/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUsflZxz6uZHjeJJmbpi12DJFaBaoADaS47W1McJ9fB4q1ghYpJqhD6aQtyh6Pxccu/exec";
 
+// ✅ 고유 세션 ID
 if (!localStorage.getItem("sessionId")) {
   localStorage.setItem("sessionId", "sess-" + Math.random().toString(36).substr(2, 9));
 }
 const SESSION_ID = localStorage.getItem("sessionId");
 
+// 방문 로그 기록
 fetch(`${SCRIPT_URL}?action=visit&session=${SESSION_ID}`);
 
 const data = {
@@ -248,6 +249,7 @@ function scrollBottom() {
 
 function loadHome() {
   currentPage = "home";
+  fetch(`${SCRIPT_URL}?action=home&session=${SESSION_ID}`);
   const chat = document.getElementById("chat-content");
   chat.innerHTML = `
     <div class="fade">
@@ -281,7 +283,6 @@ function showRecommend(level) {
   selectedLevel = level || "";
   currentPage = "result";
   fetch(`${SCRIPT_URL}?action=select&type=${selectedType}&level=${selectedLevel}&session=${SESSION_ID}`);
-
   const chat = document.getElementById("chat-content");
   const books = selectedType === "기출" ? data["기출"] : data[selectedType][selectedLevel];
   chat.innerHTML = `
@@ -314,13 +315,15 @@ async function submitReview() {
   loadHome();
 }
 
-// ❤️ 넘패드
+// ❤️ 하트
 document.getElementById("heartBtn").addEventListener("click", () => {
+  fetch(`${SCRIPT_URL}?action=heart&session=${SESSION_ID}`);
   document.getElementById("numpad").style.display = "flex";
   numpadCode = "";
   document.getElementById("numpad-display").textContent = "";
 });
 
+// 넘패드 입력 처리
 document.querySelectorAll(".numpad-button").forEach(btn => {
   btn.addEventListener("click", e => {
     const val = e.target.textContent;
@@ -370,8 +373,9 @@ async function loadReviews() {
   }
 }
 
-// 🔙 단계별 뒤로가기
+// 🔙 뒤로가기
 document.getElementById("backBtn").addEventListener("click", () => {
+  fetch(`${SCRIPT_URL}?action=back&session=${SESSION_ID}`);
   if (currentPage === "level") loadHome();
   else if (currentPage === "result") selectType(selectedType);
   else if (currentPage === "review") showRecommend(selectedLevel);
@@ -379,7 +383,12 @@ document.getElementById("backBtn").addEventListener("click", () => {
   else loadHome();
 });
 
-document.getElementById("homeBtn").addEventListener("click", loadHome);
+// 🏠 처음으로
+document.getElementById("homeBtn").addEventListener("click", () => {
+  fetch(`${SCRIPT_URL}?action=home&session=${SESSION_ID}`);
+  loadHome();
+});
+
 loadHome();
 </script>
 </body>
