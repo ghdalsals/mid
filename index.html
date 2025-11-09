@@ -10,14 +10,14 @@ html,body{height:100%;margin:0;overflow-x:hidden;-webkit-text-size-adjust:100%}
 :root{
   --outer:#dbdfcc;        /* 바깥 배경 */
   --bg:#ffffff;
-  --fg:#40442f;           /* ✅ 본문 텍스트 컬러(요청 반영) */
+  --fg:#40442f;           /* 본문 텍스트 컬러 */
   --muted:#3c3c3e; --line:#b6bca4;
   --radius:20px; --space:22px; --shadow:0 14px 40px rgba(0,0,0,.08);
   --speed:.18s; --ease:cubic-bezier(.25,.46,.45,.94);
   --card-anim:160ms;
 
   /* 박스/CTA/선택 색 */
-  --box:#b8c099;          /* 카드/기본 버튼/모달/토스트 */
+  --box:#b8c099;          /* 카드/기본 버튼/토스트 */
   --box-border:#aaa682;
   --cta:#899656;          /* 평가하기/제출 */
   --cta-hover:#7d8a4e;
@@ -72,7 +72,7 @@ body{
 h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center; color:var(--fg) }
 .p{margin:0; color:var(--muted); font-size:16.5px}
 
-/* ✅ 박스 내부 폰트 두께 통일(600) */
+/* 박스 내부 폰트 두께 통일(600) */
 .button, .button * ,
 .card, .card * ,
 .modal-box, .modal-box * ,
@@ -107,9 +107,9 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center; color:
 .bottom .button:hover{ transform:translateY(-1px); filter:brightness(1.03); }
 .bottom .button:active{ transform:translateY(0); filter:brightness(.97); }
 
-/* 하트 아이콘(SF Symbols 느낌, 아웃라인) — ✅ 크기 14px */
+/* 하트 아이콘(SF Symbols 느낌, 아웃라인) — 크기 14px */
 .icon{
-  width:14px;  /* 18 → 14로 축소 */
+  width:14px;
   height:14px;
   display:inline-block; vertical-align:middle;
 }
@@ -166,15 +166,16 @@ textarea{ width:100%; max-width:100%; border:1px solid #dcdcdc; background:#fff;
 .modal{ position:fixed; inset:0; display:none; background:rgba(0,0,0,.4); align-items:center; justify-content:center; padding:16px }
 .modal-box{
   width:min(420px,94vw);
-  background: var(--box); /* #b8c099 */
-  color: #fff;
-  border:1px solid var(--box-border);
+  /* ✅ 요청: 모달 박스 전체 배경을 #dbdfcc 로 */
+  background:#dbdfcc;
+  color: var(--fg); /* 글자색은 본문색으로 */
+  border:1px solid #c6cbb9; /* 약간 진한 톤으로 테두리 */
   border-radius:16px;
   box-shadow:var(--shadow);
   padding:18px;
 }
 .modal h4{
-  margin:0 0 12px 0; font-size:18px; text-align:center; font-weight:600; color:#fff;
+  margin:0 0 12px 0; font-size:18px; text-align:center; font-weight:600; color:var(--fg);
 }
 .input{
   width:100%; border:1px solid #dcdcdc; border-radius:12px; padding:10px 12px; font-size:16px;
@@ -183,7 +184,7 @@ textarea{ width:100%; max-width:100%; border:1px solid #dcdcdc; background:#fff;
 .modal-row{ display:flex; gap:10px; margin-top:12px }
 .modal-row .button{ margin:0; flex:1 } /* 취소=box색 흰글자 / 확인=cta */
 
-/* ✅ 토스트: 박스색 + 흰 글자 */
+/* 토스트: 박스색 + 흰 글자 */
 .toast{
   margin-top:10px; text-align:center;
   background: var(--box);
@@ -201,7 +202,7 @@ textarea{ width:100%; max-width:100%; border:1px solid #dcdcdc; background:#fff;
     <div class="bottom" role="group" aria-label="하단 도구">
       <button class="button" id="backBtn"  aria-label="되돌아가기" title="되돌아가기">←</button>
       <button class="button" id="homeBtn"  aria-label="처음으로"   title="처음으로">⌂</button>
-      <!-- ✅ 테두리만 있는 하트 (크기 14px) -->
+      <!-- 테두리만 있는 하트 (크기 14px) -->
       <button class="button" id="heartBtn" aria-label="관리자" title="관리자">
         <span class="icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" focusable="false">
@@ -397,7 +398,7 @@ function openEvaluation(){
       <div style="margin-top:12px">
         <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
         <button class="button cta" style="margin-top:10px" id="submitBtn">제출</button>
-        <!-- ✅ 토스트: 박스색(#b8c099) + 흰 글자 -->
+        <!-- 토스트: 박스색(#b8c099) + 흰 글자 -->
         <div id="thanksToast" class="toast" style="display:none;">✅ 평가가 제출되었습니다. 감사합니다! 🙏</div>
       </div>
     </div>
