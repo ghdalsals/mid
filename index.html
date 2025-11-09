@@ -13,7 +13,7 @@ html,body{height:100%;margin:0;overflow-x:hidden;-webkit-text-size-adjust:100%}
   --ease: cubic-bezier(.25,.46,.45,.94);
   --speed:.28s;
   --card-anim: 220ms;   /* 카드 전환 통일 */
-  --page-anim: 260ms;   /* 화면(step) 전환 통일 (iOS 슬라이드) */
+  --page-anim: 220ms;   /* 화면(step) 전환 통일 (페이드) */
 }
 
 /* 레이아웃 */
@@ -24,7 +24,7 @@ body{
   padding: clamp(18px, 4vw, 36px);
 }
 
-/* ✅ 실제 스마트폰 비율: 기본 9:19.5, 데스크톱 캡, 모바일 svh 꽉 채움 */
+/* 스마트폰 비율 + 데스크톱 길이 보정 */
 .chat{
   width: clamp(360px, 92vw, 430px);
   aspect-ratio: 9 / 19.5;
@@ -44,12 +44,12 @@ body{
   }
 }
 @media (min-width: 900px){
-  .chat{ aspect-ratio: 10 / 17; } /* 데스크톱 길쭉함 완화 */
+  .chat{ aspect-ratio: 10 / 17; }
 }
 
 .header{ padding: calc(var(--space) - 4px) var(--space) var(--space); border-bottom:1px solid var(--line) }
 .title{ margin:0; font-size:22px; font-weight:600; letter-spacing:-.02em; text-align:center }
-#chat-content{ flex:1; padding: var(--space); overflow-y:auto; overflow-x:hidden; scroll-behavior:smooth }
+#chat-content{ flex:1; padding: var(--space); overflow-y:auto; overflow-x:hidden; }
 h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .p{margin:0; color:var(--muted); font-size:16.5px}
 
@@ -62,9 +62,9 @@ h3{margin:0 0 14px 0; font-size:18px; font-weight:600; text-align:center}
 .button:hover{ transform:translateY(-1px); filter:brightness(1.02) }
 .button:active{ transform:translateY(0); filter:brightness(.98) }
 
-/* CTA(평가하기/제출) — 요청: 카드보다 진하게 */
+/* CTA(평가하기/제출) — 카드보다 살짝 더 진함 */
 .button.cta{
-  background:#c7c7ce;    /* 살짝 더 진한 회색 */
+  background:#c7c7ce;
   color:#1d1d1f;
   border-color:#bdbdc4;
 }
@@ -128,27 +128,23 @@ textarea{ width:100%; max-width:100%; border:1px solid var(--line); background:#
 @keyframes fadein{ from{opacity:0} to{opacity:1} }
 
 /* =========================
-   iOS 스타일 '슬라이드' 전환
+   페이드 전환 (통일)
    ========================= */
-.view{ will-change: transform, opacity; }
-
-/* 새 화면 진입 */
-.slide-enter{ transform: translateX(12%); opacity:0; }
-.slide-enter-active{
-  transform: translateX(0); opacity:1;
-  transition: transform var(--page-anim) var(--ease), opacity var(--page-anim) var(--ease);
+.view{ will-change: opacity; }
+.fade-enter{ opacity:0; }
+.fade-enter-active{
+  opacity:1;
+  transition: opacity var(--page-anim) var(--ease);
 }
-
-/* 이전 화면 이탈 */
-.slide-leave{ transform: translateX(0); opacity:1; }
-.slide-leave-active{
-  transform: translateX(-8%); opacity:0;
-  transition: transform var(--page-anim) var(--ease), opacity var(--page-anim) var(--ease);
+.fade-leave{ opacity:1; }
+.fade-leave-active{
+  opacity:0;
+  transition: opacity var(--page-anim) var(--ease);
 }
 
 /* 접근성: 모션 최소화 */
 @media (prefers-reduced-motion: reduce){
-  .slide-enter, .slide-leave{ transform:none !important; }
+  .fade-enter, .fade-leave{ opacity:1 !important; }
 }
 </style>
 </head>
@@ -221,11 +217,9 @@ const CLICK_MS = 220; // 카드 클릭/해제 피드백 시간(CSS와 일치)
 
 const $ = id => document.getElementById(id);
 const chat = () => $("chat-content");
-const scrollTop = () => { chat().scrollTop=0; };
-const scrollBottom = () => { chat().scrollTop=chat().scrollHeight; };
 
-/* 화면 전환: iOS 슬라이드 (통일) */
-function swapView(html, klass='slide'){
+/* 화면 전환: 페이드 (통일) + 전환 완료 후 항상 맨 위 유지 */
+function swapView(html, klass='fade'){
   const c = chat();
   const old = document.createElement('div');
   old.className = `view ${klass}-leave`;
@@ -239,12 +233,20 @@ function swapView(html, klass='slide'){
   c.appendChild(old);
   c.appendChild(neu);
 
+  // 전환 시작 전에 스크롤을 꼭 맨 위로 초기화(다음 화면이 아래로 밀려 보이는 문제 방지)
+  c.scrollTop = 0;
+
   requestAnimationFrame(()=>{
     old.classList.add(`${klass}-leave-active`);
     neu.classList.add(`${klass}-enter-active`);
   });
 
-  setTimeout(()=>{ c.innerHTML = ''; c.appendChild(neu); neu.className = 'view'; }, 280);
+  setTimeout(()=>{
+    c.innerHTML = '';
+    c.appendChild(neu);
+    neu.className = 'view';
+    c.scrollTop = 0; // 전환 완료 후에도 한 번 더 보정
+  }, 240);
 }
 
 /* 최근 제출 정보 로컬 저장/복원 (관리자에서 표시) */
@@ -277,7 +279,7 @@ function viewHome(msg){
       <button class="button" onclick="viewType('유형 심화서')">유형 심화서</button>
       <button class="button" onclick="viewType('기출')">기출</button>
     </div>`;
-  swapView(html, 'slide');  // iOS 슬라이드 전환
+  swapView(html, 'fade');
 }
 
 /* ===== 유형 선택 → 난이도 ===== */
@@ -290,10 +292,9 @@ function viewType(t){
   }else if(t==="유형 심화서"){
     html = `<h3>${t} 난이도를 선택하세요</h3>` + [1,2,3,4,5].map(i=>`<button class="button" onclick="viewResult(${i})">${i}단계</button>`).join('');
   }else{
-    // 기출은 난이도 없이 결과로
     return viewResult();
   }
-  swapView(`<div>${html}</div>`, 'slide');
+  swapView(`<div>${html}</div>`, 'fade');
 }
 
 /* ===== 결과(책 리스트 + 토글 선택) ===== */
@@ -310,9 +311,8 @@ function viewResult(lv){
       <div id="bookList"></div>
       <button class="button cta" id="evalBtn">평가하기</button>
     </div>`;
-  swapView(html, 'slide');
+  swapView(html, 'fade');
 
-  // 렌더 후 바인딩
   const listEl = document.getElementById("bookList");
   listEl.innerHTML = books.map((b,i)=>`<div class="card" data-book="${b}" tabindex="0" role="button" aria-label="${b}">${i+1}. ${b}</div>`).join('');
 
@@ -321,13 +321,10 @@ function viewResult(lv){
     const book = el.getAttribute("data-book");
     const handleToggle = ()=>{
       haptic.light();
-
-      // 공통 클릭 피드백(선택/해제 동일 타이밍)
       el.classList.add("clicked");
       setTimeout(()=>{ el.classList.remove("clicked"); }, CLICK_MS);
 
       if(el.classList.contains("selected")){
-        // 해제 (로그 전송 없음)
         el.classList.remove("selected");
         if(lastClickedBook === book) lastClickedBook = "";
       }else{
@@ -344,12 +341,18 @@ function viewResult(lv){
   document.getElementById("evalBtn").onclick = ()=>{ haptic.medium(); openEvaluation(); };
 }
 
-/* ===== 평가 ===== */
+/* ===== 평가 (별도 화면, 전환 페이드) ===== */
 function openEvaluation(){
-  // 평가 화면은 인라인 추가 대신, 슬라이드 전환으로 통일감 유지
-  const block = `
-    <div id="evalSection" style="margin-top:14px">
-      <h3>만족도 선택</h3>
+  const books = (selectedType==="기출")? data["기출"] : data[selectedType][selectedLevel];
+  const items = books.map((b,i)=>`<div class="card ${lastClickedBook===b?'selected':''}" data-book="${b}" tabindex="0" role="button" aria-label="${b}">${i+1}. ${b}</div>`).join('');
+
+  const html = `
+    <div id="evalSection">
+      <h3>추천 문제집</h3>
+      <div id="bookList">${items}</div>
+      <button class="button cta" disabled>평가하기</button>
+
+      <h3 style="margin-top:14px">만족도 선택</h3>
       <div class="rating" id="ratingGroup">
         <input id="r1" type="radio" name="s" value="불만족"><label class="emoji" for="r1" title="불만족">😡</label>
         <input id="r2" type="radio" name="s" value="조금 불만족"><label class="emoji" for="r2" title="조금 불만족">😕</label>
@@ -364,14 +367,7 @@ function openEvaluation(){
       </div>
     </div>
   `;
-
-  // 현재 결과 화면의 상단도 포함해서 하나의 뷰로 구성
-  const header = `<h3>추천 문제집</h3>`;
-  let items = '';
-  const books = (selectedType==="기출")? data["기출"] : data[selectedType][selectedLevel];
-  items = books.map((b,i)=>`<div class="card ${lastClickedBook===b?'selected':''}" data-book="${b}" tabindex="0" role="button" aria-label="${b}">${i+1}. ${b}</div>`).join('');
-  const html = `<div>${header}<div id="bookList">${items}</div><button class="button cta" disabled>평가하기</button>${block}</div>`;
-  swapView(html, 'slide');
+  swapView(html, 'fade');
 
   // 책 토글(평가 화면에서도 유지)
   const listEl = document.getElementById("bookList");
@@ -413,11 +409,6 @@ function openEvaluation(){
       e.preventDefault();
       onSubmit();
     }
-  });
-
-  // 평가 섹션이 보이도록 하단으로 스크롤
-  requestAnimationFrame(()=>{
-    scrollBottom();
   });
 }
 
@@ -465,13 +456,10 @@ document.getElementById("homeBtn").onclick = ()=>{ haptic.medium(); viewHome(); 
 document.getElementById("backBtn").onclick = ()=>{
   haptic.light();
   if(selectedType==="기출"){
-    // 기출은 홈으로
     viewHome();
   }else if(currentPage==="result"){
-    // 결과 → 난이도 선택
     viewType(selectedType);
   }else{
-    // 그 외 → 홈
     viewHome();
   }
 };
@@ -536,7 +524,7 @@ async function loadAdmin(){
         </div>
       </div>
     `;
-    swapView(html, 'slide');
+    swapView(html, 'fade');
   }catch(e){
     alert("관리자 데이터를 불러오지 못했습니다.");
   }
