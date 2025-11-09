@@ -102,9 +102,6 @@ textarea {
 }
 .recommend-item:hover { transform: translateY(-2px); }
 
-.fade { animation: fadeIn 0.4s ease-in-out; }
-@keyframes fadeIn { from {opacity: 0; transform: translateY(10px);} to {opacity: 1; transform: translateY(0);} }
-
 /* ✅ 이모티콘 (세로 스크롤 방지, 간격 고정) */
 .emoji-container {
   display: grid;
@@ -223,7 +220,7 @@ function scrollBottom() {
 function loadHome() {
   const chat = document.getElementById("chat-content");
   chat.innerHTML = `
-    <div class="fade">
+    <div>
       <h3>어떤 문제집 추천이 필요하신가요?</h3>
       <button class="button" onclick="selectType('개념서')">개념서</button>
       <button class="button" onclick="selectType('유형 심화서')">유형 심화서</button>
@@ -250,7 +247,7 @@ function showRecommend(level) {
   const chat = document.getElementById("chat-content");
   const books = selectedType === "기출" ? data["기출"] : data[selectedType][selectedLevel];
   chat.innerHTML = `
-    <div class="fade">
+    <div>
       <h3>추천 문제집 목록</h3>
       ${books.map(b => `<div class="recommend-item">${b}</div>`).join('')}
       <button class="button" onclick="openSatisfaction()">평가하기</button>
@@ -260,7 +257,7 @@ function showRecommend(level) {
 function openSatisfaction() {
   const chat = document.getElementById("chat-content");
   chat.innerHTML += `
-    <div id="satisfactionBox" class="fade">
+    <div id="satisfactionBox">
       <h3>이 추천에 얼마나 만족하시나요?</h3>
       <div class="emoji-container">
         <span class="emoji" data-value="불만족">😡</span>
@@ -282,7 +279,7 @@ function selectSatisfaction(e) {
   const chat = document.getElementById("chat-content");
   if (!document.getElementById("reviewBox")) {
     chat.innerHTML += `
-      <div id="reviewBox" class="fade">
+      <div id="reviewBox">
         <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
         <button class="button" onclick="submitReview()">제출</button>
       </div>`;
