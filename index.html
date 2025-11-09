@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>문제집 추천 알고리즘</title>
 
 <style>
 :root {
-  --bg-main: #f5f5f7;
-  --chat-bg: #ffffff;
-  --btn-bg: #f0f0f2;
-  --btn-hover: #e5e5e7;
-  --btn-active: #d0d0d3;
-  --text-main: #1d1d1f;
-  --border-color: #e0e0e0;
+  --bg-main: #ffffff;
+  --chat-bg: #1d1d1f;
+  --box-bg: #ffffff;
+  --box-alt: #f5f5f7;
+  --btn-bg: #2e2e30;
+  --btn-hover: #3a3a3c;
+  --btn-active: #505052;
+  --text-main: #f5f5f7;
+  --border-color: #333;
   --radius: 20px;
+  --shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   --transition: all 0.25s ease;
-  --shadow: 0 8px 30px rgba(0,0,0,0.08);
 }
 
 body {
@@ -38,21 +40,21 @@ body {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  transition: var(--transition);
 }
 
 #chat-content {
   flex-grow: 1;
   overflow-y: auto;
   scroll-behavior: smooth;
-  font-size: 1rem;
   color: var(--text-main);
+  font-size: 1rem;
 }
 
 h3 {
   font-weight: 600;
   font-size: 1.15rem;
   margin-bottom: 12px;
+  color: var(--text-main);
 }
 
 .button {
@@ -87,16 +89,28 @@ h3 {
 
 textarea {
   width: 100%;
-  max-width: 100%;
   border-radius: 12px;
   padding: 10px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #555;
   font-family: inherit;
   resize: none;
   font-size: 0.95rem;
-  color: var(--text-main);
-  background-color: #fafafa;
+  color: #000;
+  background-color: var(--box-alt);
   box-sizing: border-box;
+}
+
+.recommend-item {
+  background: var(--box-bg);
+  color: #000;
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin: 6px 0;
+  transition: var(--transition);
+}
+
+.recommend-item:nth-child(even) {
+  background: var(--box-alt);
 }
 
 .fade {
@@ -147,34 +161,16 @@ textarea {
 }
 
 .numpad-button {
-  background-color: var(--btn-bg);
-  color: var(--text-main);
+  background-color: #eee;
+  color: #000;
   font-size: 1.2rem;
-  border: 1px solid var(--border-color);
+  border: none;
   border-radius: 12px;
   cursor: pointer;
   transition: var(--transition);
 }
-
 .numpad-button:hover {
-  background-color: var(--btn-hover);
-}
-.numpad-button:active {
-  transform: scale(0.96);
-}
-
-.recommend-item {
-  background: #fafafa;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 8px 12px;
-  margin: 6px 0;
-  transition: var(--transition);
-}
-
-.recommend-item:hover {
-  background: #f0f0f0;
-  transform: translateY(-2px);
+  background-color: #ddd;
 }
 </style>
 </head>
@@ -245,13 +241,13 @@ let numpadCode = "";
 function scrollTopReset() {
   document.getElementById("chat-content").scrollTop = 0;
 }
-
 function scrollBottom() {
   const chat = document.getElementById("chat-content");
   chat.scrollTop = chat.scrollHeight;
 }
 
 function loadHome() {
+  currentPage = "home";
   const chat = document.getElementById("chat-content");
   chat.innerHTML = `
     <div class="fade">
@@ -265,13 +261,16 @@ function loadHome() {
 
 function selectType(type) {
   selectedType = type;
+  currentPage = "level";
   fetch(`${SCRIPT_URL}?action=select&type=${type}&session=${SESSION_ID}`);
-  const chat = document.getElementById("chat-content");
 
+  const chat = document.getElementById("chat-content");
   if (type === "개념서") {
-    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` + [1,2,3,4].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
+    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` +
+      [1,2,3,4].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
   } else if (type === "유형 심화서") {
-    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` + [1,2,3,4,5].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
+    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` +
+      [1,2,3,4,5].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
   } else {
     showRecommend();
   }
@@ -280,7 +279,9 @@ function selectType(type) {
 
 function showRecommend(level) {
   selectedLevel = level || "";
+  currentPage = "result";
   fetch(`${SCRIPT_URL}?action=select&type=${selectedType}&level=${selectedLevel}&session=${SESSION_ID}`);
+
   const chat = document.getElementById("chat-content");
   const books = selectedType === "기출" ? data["기출"] : data[selectedType][selectedLevel];
   chat.innerHTML = `
@@ -295,13 +296,13 @@ function showRecommend(level) {
 }
 
 function openReviewInput() {
+  currentPage = "review";
   const chat = document.getElementById("chat-content");
   chat.innerHTML += `
     <div id="reviewBox" class="fade">
       <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
       <button class="button" onclick="submitReview()">제출</button>
     </div>`;
-  // ✅ 평가창이 추가되면 자동으로 스크롤을 하단으로 이동
   setTimeout(scrollBottom, 200);
 }
 
@@ -313,7 +314,7 @@ async function submitReview() {
   loadHome();
 }
 
-// 💖 넘패드 기능
+// ❤️ 넘패드
 document.getElementById("heartBtn").addEventListener("click", () => {
   document.getElementById("numpad").style.display = "flex";
   numpadCode = "";
@@ -335,16 +336,13 @@ document.querySelectorAll(".numpad-button").forEach(btn => {
 });
 
 function checkCode() {
-  if (numpadCode === "0411") {
-    document.getElementById("numpad").style.display = "none";
-    loadReviews();
-  } else {
-    alert("잘못된 코드입니다.");
-    document.getElementById("numpad").style.display = "none";
-  }
+  document.getElementById("numpad").style.display = "none";
+  if (numpadCode === "0411") loadReviews();
+  else alert("잘못된 코드입니다.");
 }
 
 async function loadReviews() {
+  currentPage = "reviews";
   const chat = document.getElementById("chat-content");
   chat.innerHTML = "<h3>📊 평가 불러오는 중...</h3>";
 
@@ -363,23 +361,25 @@ async function loadReviews() {
         <div class="recommend-item">
           <b>${r.type}</b> ${r.level ? `${r.level}단계` : ""}<br>
           ${r.review}<br>
-          <small style="color:#666;">${r.datetime}</small>
+          <small style="color:#555;">${r.datetime}</small>
         </div>`;
     });
     scrollTopReset();
   } catch (err) {
-    console.error("리뷰 로드 오류:", err);
     chat.innerHTML = "<p>⚠️ 평가 데이터를 불러오는 중 오류가 발생했습니다.</p>";
   }
 }
 
-document.getElementById("homeBtn").addEventListener("click", loadHome);
+// 🔙 단계별 뒤로가기
 document.getElementById("backBtn").addEventListener("click", () => {
   if (currentPage === "level") loadHome();
   else if (currentPage === "result") selectType(selectedType);
+  else if (currentPage === "review") showRecommend(selectedLevel);
+  else if (currentPage === "reviews") loadHome();
   else loadHome();
 });
 
+document.getElementById("homeBtn").addEventListener("click", loadHome);
 loadHome();
 </script>
 </body>
