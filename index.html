@@ -1,167 +1,14 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>문제집 추천 알고리즘</title>
-<style>
-:root {
-  --theme-bg: #E9C4D7;
-  --button-bg: #4f67ab;
-  --outer-bg: #FFFFFF;
-  --text-main: #000000;
-  --text-light: #FFFFFF;
-  --radius: 15px;
-}
-
-body {
-  background-color: var(--outer-bg);
-  font-family: 'Noto Sans KR', sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-}
-
-.chat-container {
-  background-color: var(--theme-bg);
-  width: 420px;
-  height: 600px;
-  border-radius: 25px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-#chat-content {
-  flex-grow: 1;
-  overflow-y: auto;
-  scroll-behavior: smooth;
-  color: var(--text-main);
-  font-size: 1rem;
-}
-
-.button {
-  background-color: var(--button-bg);
-  color: var(--text-light);
-  border: none;
-  border-radius: var(--radius);
-  padding: 10px 15px;
-  margin: 10px 0;
-  font-size: 1rem;
-  cursor: pointer;
-  width: 100%;
-  transition: none;
-  touch-action: manipulation;
-}
-
-/* 모바일 hover 잔상 제거 & 눌림 피드백만 */
-.button:active {
-  opacity: 0.8;
-  transform: scale(0.98);
-}
-
-.bottom-bar {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-
-.fade {
-  animation: fadeIn 0.5s ease;
-}
-@keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
-
-/* 넘패드 */
-#numpad {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background-color: rgba(0,0,0,0.6);
-  display: none;
-  justify-content: center;
-  align-items: center;
-}
-
-.numpad-container {
-  background-color: var(--theme-bg);
-  padding: 20px;
-  border-radius: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-#numpad-display {
-  background-color: #fff;
-  color: #000;
-  font-size: 1.4rem;
-  text-align: center;
-  width: 180px;
-  padding: 8px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-}
-
-.numpad-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 60px);
-  grid-gap: 10px;
-}
-
-.numpad-button {
-  background-color: var(--button-bg);
-  color: var(--text-light);
-  font-size: 1.2rem;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: none;
-}
-
-.numpad-button:active {
-  opacity: 0.8;
-  transform: scale(0.96);
-}
-</style>
-</head>
-
-<body>
-<div class="chat-container">
-  <div id="chat-content"></div>
-
-  <div class="bottom-bar">
-    <button class="button" id="backBtn">🔙 뒤로가기</button>
-    <button class="button" id="homeBtn">🏠 처음으로</button>
-    <button class="button" id="heartBtn">💖</button>
-  </div>
-</div>
-
-<!-- 넘패드 -->
-<div id="numpad">
-  <div class="numpad-container">
-    <div id="numpad-display"></div>
-    <div class="numpad-grid">
-      <button class="numpad-button">1</button>
-      <button class="numpad-button">2</button>
-      <button class="numpad-button">3</button>
-      <button class="numpad-button">4</button>
-      <button class="numpad-button">5</button>
-      <button class="numpad-button">6</button>
-      <button class="numpad-button">7</button>
-      <button class="numpad-button">8</button>
-      <button class="numpad-button">9</button>
-      <button class="numpad-button">0</button>
-      <button class="numpad-button" id="clearBtn">Clear</button>
-      <button class="numpad-button" id="enterBtn">Enter</button>
-    </div>
-  </div>
-</div>
-
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkp09NYXwtejuByVP7Rd9oOMNkuWJRoBkggfu2mwlcBdfkbSoc-maEflfpLhSa3Oq_/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrC2UrWD0QeYKU4q7bnst9Jo7y26E7Jpg2H7II2hSHHAaIcKtdkXdG0hJWwKBXS32b/exec";
+
+// 📌 익명 사용자 세션 ID 생성 (브라우저별 고유값)
+if (!localStorage.getItem("sessionId")) {
+  localStorage.setItem("sessionId", "sess-" + Math.random().toString(36).substr(2, 9));
+}
+const SESSION_ID = localStorage.getItem("sessionId");
+
+// 🧍 방문자 로그 저장
+fetch(`${SCRIPT_URL}?action=visit&session=${SESSION_ID}`);
 
 const data = {
   "개념서": {
@@ -185,6 +32,7 @@ let selectedType = "";
 let selectedLevel = "";
 let numpadCode = "";
 
+// 📜 화면 초기화
 function scrollTopReset() {
   document.getElementById("chat-content").scrollTop = 0;
 }
@@ -207,13 +55,17 @@ function loadHome() {
 
 function selectType(type) {
   selectedType = type;
+  fetch(`${SCRIPT_URL}?action=select&type=${type}&session=${SESSION_ID}`); // 선택 로그 전송
+
   currentPage = "level";
   const chat = document.getElementById("chat-content");
 
   if (type === "개념서") {
-    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` + [1,2,3,4].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
+    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` +
+      [1,2,3,4].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
   } else if (type === "유형 심화서") {
-    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` + [1,2,3,4,5].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
+    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` +
+      [1,2,3,4,5].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
   } else {
     showRecommend();
   }
@@ -222,17 +74,18 @@ function selectType(type) {
 
 function showRecommend(level) {
   selectedLevel = level || "";
+  fetch(`${SCRIPT_URL}?action=select&type=${selectedType}&level=${selectedLevel}&session=${SESSION_ID}`); // 난이도 선택 로그 전송
+
   currentPage = "result";
   const chat = document.getElementById("chat-content");
-
-  let books;
-  if (selectedType === "기출") books = data["기출"];
-  else books = data[selectedType][selectedLevel];
+  let books = selectedType === "기출" ? data["기출"] : data[selectedType][selectedLevel];
 
   chat.innerHTML = `
     <div class="fade">
       <h3>추천 문제집 목록</h3>
-      <ul>${books.map(b => `<li style="margin:6px 0; background:#fff; border-radius:10px; padding:6px 10px;">${b}</li>`).join('')}</ul>
+      <ul style="padding-left:15px;">
+        ${books.map(b => `<li style="margin:6px 0; background:#fff; border-radius:10px; padding:6px 10px;">${b}</li>`).join('')}
+      </ul>
       <button class="button" onclick="openReviewInput()">평가하기</button>
     </div>
   `;
@@ -243,8 +96,8 @@ function openReviewInput() {
   const chat = document.getElementById("chat-content");
   chat.innerHTML += `
     <div class="fade" id="reviewBox">
-      <textarea id="reviewText" rows="3" style="width:100%;border-radius:10px;padding:8px;margin-top:8px;"></textarea>
-      <button class="button" onclick="submitReview()">제출</button>
+      <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..." style="width:100%; box-sizing:border-box; border-radius:10px; padding:8px; border:1px solid #ccc; margin-top:8px; background:#fafafa;"></textarea>
+      <button class="button" style="width:100%;" onclick="submitReview()">제출</button>
     </div>
   `;
   scrollTopReset();
@@ -254,20 +107,13 @@ async function submitReview() {
   const text = document.getElementById("reviewText").value.trim();
   if (!text) return alert("평가 내용을 입력해주세요!");
 
-  // ✅ book 제거
-  const params = new URLSearchParams({
-    action: "write",
-    type: selectedType,
-    level: selectedLevel,
-    review: text
-  });
-
-  await fetch(`${SCRIPT_URL}?${params.toString()}`);
+  // 리뷰 전송
+  await fetch(`${SCRIPT_URL}?action=review&type=${selectedType}&level=${selectedLevel}&review=${encodeURIComponent(text)}&session=${SESSION_ID}`);
   alert("평가가 제출되었습니다!");
-  loadHome(); // ✅ 자동으로 처음 화면 복귀
+  loadHome();
 }
 
-// 💖 넘패드
+// ❤️ 넘패드 (비밀번호 0411 입력 시 리뷰 열람)
 document.getElementById("heartBtn").addEventListener("click", () => {
   document.getElementById("numpad").style.display = "flex";
   numpadCode = "";
@@ -296,12 +142,12 @@ function checkCode() {
 
 async function loadReviews() {
   const res = await fetch(`${SCRIPT_URL}?action=read`);
-  const data = await res.json();
+  const reviews = await res.json();
   const chat = document.getElementById("chat-content");
   chat.innerHTML = "<h3>다른 사용자들의 평가 (최신순)</h3>";
-  data.reverse().slice(0,10).forEach(r => {
+  reviews.reverse().slice(0, 10).forEach(r => {
     chat.innerHTML += `
-      <div style="margin:8px 0;background:rgba(255,255,255,0.8);padding:8px;border-radius:10px;">
+      <div style="margin:8px 0;background:#fff;padding:8px;border-radius:10px;">
         <b>${r.type}</b> ${r.level ? `${r.level}단계` : ""}<br>
         ${r.review}<br>
         <small>${r.datetime}</small>
@@ -311,7 +157,7 @@ async function loadReviews() {
   scrollTopReset();
 }
 
-// 뒤로가기 / 처음으로
+// 🔙 뒤로가기 / 🏠 처음으로
 document.getElementById("homeBtn").addEventListener("click", loadHome);
 document.getElementById("backBtn").addEventListener("click", () => {
   if (currentPage === "level") loadHome();
@@ -319,7 +165,6 @@ document.getElementById("backBtn").addEventListener("click", () => {
   else loadHome();
 });
 
+// 🚀 시작 시 홈화면 로드
 loadHome();
 </script>
-</body>
-</html>
