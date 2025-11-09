@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>문제집 추천 알고리즘</title>
-
 <style>
 :root {
   --bg-main: #ffffff;
@@ -70,14 +69,8 @@ h3 {
   transition: var(--transition);
   box-sizing: border-box;
 }
-
-.button:hover {
-  background-color: var(--btn-hover);
-}
-.button:active {
-  background-color: var(--btn-active);
-  transform: scale(0.98);
-}
+.button:hover { background-color: var(--btn-hover); }
+.button:active { background-color: var(--btn-active); transform: scale(0.98); }
 
 .bottom-bar {
   display: flex;
@@ -107,18 +100,23 @@ textarea {
   margin: 6px 0;
   transition: var(--transition);
 }
+.recommend-item:nth-child(even) { background: var(--box-alt); }
 
-.recommend-item:nth-child(even) {
-  background: var(--box-alt);
-}
+.fade { animation: fadeIn 0.4s ease-in-out; }
+@keyframes fadeIn { from {opacity: 0; transform: translateY(10px);} to {opacity: 1; transform: translateY(0);} }
 
-.fade {
-  animation: fadeIn 0.4s ease-in-out;
+.emoji-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
 }
-@keyframes fadeIn {
-  from {opacity: 0; transform: translateY(10px);}
-  to {opacity: 1; transform: translateY(0);}
+.emoji {
+  font-size: 2rem;
+  cursor: pointer;
+  transition: transform 0.2s, filter 0.2s;
 }
+.emoji:hover { transform: scale(1.2); }
+.selected { transform: scale(1.3); filter: drop-shadow(0 0 5px #fff); }
 
 /* 넘패드 */
 #numpad {
@@ -168,9 +166,7 @@ textarea {
   cursor: pointer;
   transition: var(--transition);
 }
-.numpad-button:hover {
-  background-color: #ddd;
-}
+.numpad-button:hover { background-color: #ddd; }
 </style>
 </head>
 
@@ -206,15 +202,13 @@ textarea {
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUsflZxz6uZHjeJJmbpi12DJFaBaoADaS47W1McJ9fB4q1ghYpJqhD6aQtyh6Pxccu/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypbNF4_cfeeRuscpeg6WcNMr1pM3S6Pz_XBoY6UCBOTKIRqSF_gqIau6RkkQpT-MCp/exec";
 
-// ✅ 고유 세션 ID
 if (!localStorage.getItem("sessionId")) {
   localStorage.setItem("sessionId", "sess-" + Math.random().toString(36).substr(2, 9));
 }
 const SESSION_ID = localStorage.getItem("sessionId");
 
-// 방문 로그 기록
 fetch(`${SCRIPT_URL}?action=visit&session=${SESSION_ID}`);
 
 const data = {
@@ -234,10 +228,10 @@ const data = {
   "기출": ["자이스토리","짱 어려운 유형 고난도 4점짜리 수학","너희들의 기출문제","마플 수능기출총정리","수능 기출의 바이블","실전+수능 고쟁이","어삼쉬사","너기출","수능 기출의 미래","쎈 기출","티오피 클래스 수능 기출문제집","이동훈 기출문제집","담금질","백미","기출의 고백","마더텅","올림포스 기출문제집"]
 };
 
+let satisfaction = "";
 let currentPage = "home";
 let selectedType = "";
 let selectedLevel = "";
-let numpadCode = "";
 
 function scrollTopReset() {
   document.getElementById("chat-content").scrollTop = 0;
@@ -265,8 +259,8 @@ function selectType(type) {
   selectedType = type;
   currentPage = "level";
   fetch(`${SCRIPT_URL}?action=select&type=${type}&session=${SESSION_ID}`);
-
   const chat = document.getElementById("chat-content");
+
   if (type === "개념서") {
     chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` +
       [1,2,3,4].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
@@ -291,103 +285,56 @@ function showRecommend(level) {
       <ul style="padding-left:0;">
         ${books.map(b => `<li class="recommend-item">${b}</li>`).join('')}
       </ul>
-      <button class="button" onclick="openReviewInput()">평가하기</button>
+      <button class="button" onclick="openSatisfaction()">평가하기</button>
     </div>`;
   scrollTopReset();
 }
 
-function openReviewInput() {
+// ✅ 만족도 평가 추가
+function openSatisfaction() {
   currentPage = "review";
   const chat = document.getElementById("chat-content");
   chat.innerHTML += `
-    <div id="reviewBox" class="fade">
-      <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
-      <button class="button" onclick="submitReview()">제출</button>
+    <div id="satisfactionBox" class="fade">
+      <h3>이 추천에 얼마나 만족하시나요?</h3>
+      <div class="emoji-container">
+        <span class="emoji" data-value="불만족">😡</span>
+        <span class="emoji" data-value="조금 불만족">😕</span>
+        <span class="emoji" data-value="보통">😐</span>
+        <span class="emoji" data-value="만족">🙂</span>
+        <span class="emoji" data-value="매우 만족">😍</span>
+      </div>
     </div>`;
+  document.querySelectorAll(".emoji").forEach(e =>
+    e.addEventListener("click", selectSatisfaction)
+  );
+  setTimeout(scrollBottom, 200);
+}
+
+function selectSatisfaction(e) {
+  const emojis = document.querySelectorAll(".emoji");
+  emojis.forEach(el => el.classList.remove("selected"));
+  e.target.classList.add("selected");
+  satisfaction = e.target.getAttribute("data-value");
+
+  const chat = document.getElementById("chat-content");
+  if (!document.getElementById("reviewBox")) {
+    chat.innerHTML += `
+      <div id="reviewBox" class="fade">
+        <textarea id="reviewText" rows="3" placeholder="서술형 의견을 작성해주세요..."></textarea>
+        <button class="button" onclick="submitReview()">제출</button>
+      </div>`;
+  }
   setTimeout(scrollBottom, 200);
 }
 
 async function submitReview() {
   const text = document.getElementById("reviewText").value.trim();
-  if (!text) return alert("평가 내용을 입력해주세요!");
-  await fetch(`${SCRIPT_URL}?action=review&type=${selectedType}&level=${selectedLevel}&review=${encodeURIComponent(text)}&session=${SESSION_ID}`);
+  if (!text) return alert("의견을 입력해주세요!");
+  await fetch(`${SCRIPT_URL}?action=review&type=${selectedType}&level=${selectedLevel}&review=${encodeURIComponent("[" + satisfaction + "] " + text)}&session=${SESSION_ID}`);
   alert("평가가 제출되었습니다!");
   loadHome();
 }
-
-// ❤️ 하트
-document.getElementById("heartBtn").addEventListener("click", () => {
-  fetch(`${SCRIPT_URL}?action=heart&session=${SESSION_ID}`);
-  document.getElementById("numpad").style.display = "flex";
-  numpadCode = "";
-  document.getElementById("numpad-display").textContent = "";
-});
-
-// 넘패드 입력 처리
-document.querySelectorAll(".numpad-button").forEach(btn => {
-  btn.addEventListener("click", e => {
-    const val = e.target.textContent;
-    if (val === "Clear") {
-      numpadCode = "";
-      document.getElementById("numpad-display").textContent = "";
-    } else if (val === "Enter") checkCode();
-    else {
-      numpadCode += val;
-      document.getElementById("numpad-display").textContent = numpadCode;
-    }
-  });
-});
-
-function checkCode() {
-  document.getElementById("numpad").style.display = "none";
-  if (numpadCode === "0411") loadReviews();
-  else alert("잘못된 코드입니다.");
-}
-
-async function loadReviews() {
-  currentPage = "reviews";
-  const chat = document.getElementById("chat-content");
-  chat.innerHTML = "<h3>📊 평가 불러오는 중...</h3>";
-
-  try {
-    const res = await fetch(`${SCRIPT_URL}?action=read`);
-    const reviews = await res.json();
-
-    if (!reviews.length) {
-      chat.innerHTML = "<p>아직 등록된 평가가 없습니다.</p>";
-      return;
-    }
-
-    chat.innerHTML = "<h3>📖 사용자 평가 목록</h3>";
-    reviews.reverse().forEach(r => {
-      chat.innerHTML += `
-        <div class="recommend-item">
-          <b>${r.type}</b> ${r.level ? `${r.level}단계` : ""}<br>
-          ${r.review}<br>
-          <small style="color:#555;">${r.datetime}</small>
-        </div>`;
-    });
-    scrollTopReset();
-  } catch (err) {
-    chat.innerHTML = "<p>⚠️ 평가 데이터를 불러오는 중 오류가 발생했습니다.</p>";
-  }
-}
-
-// 🔙 뒤로가기
-document.getElementById("backBtn").addEventListener("click", () => {
-  fetch(`${SCRIPT_URL}?action=back&session=${SESSION_ID}`);
-  if (currentPage === "level") loadHome();
-  else if (currentPage === "result") selectType(selectedType);
-  else if (currentPage === "review") showRecommend(selectedLevel);
-  else if (currentPage === "reviews") loadHome();
-  else loadHome();
-});
-
-// 🏠 처음으로
-document.getElementById("homeBtn").addEventListener("click", () => {
-  fetch(`${SCRIPT_URL}?action=home&session=${SESSION_ID}`);
-  loadHome();
-});
 
 loadHome();
 </script>
