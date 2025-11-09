@@ -7,18 +7,21 @@
 
 <style>
 :root {
-  --bg-main: #ffffff;  /* 전체 배경 */
-  --chat-bg: #000000;  /* 채팅창 배경 */
-  --card-bg: #f6f6f6;  /* 내부 상자 */
-  --text-main: #000000;
-  --btn-bg: #f2f2f2;
-  --btn-hover: #e5e5e5;
-  --radius: 14px;
+  --bg-main: #f5f5f7;
+  --chat-bg: #ffffff;
+  --btn-bg: #f0f0f2;
+  --btn-hover: #e5e5e7;
+  --btn-active: #d0d0d3;
+  --text-main: #1d1d1f;
+  --border-color: #e0e0e0;
+  --radius: 20px;
+  --transition: all 0.25s ease;
+  --shadow: 0 8px 30px rgba(0,0,0,0.08);
 }
 
 body {
   background-color: var(--bg-main);
-  font-family: 'Noto Sans KR', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Noto Sans KR", sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -30,11 +33,12 @@ body {
   background-color: var(--chat-bg);
   width: 420px;
   height: 600px;
-  border-radius: 24px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   padding: 20px;
   display: flex;
   flex-direction: column;
+  transition: var(--transition);
 }
 
 #chat-content {
@@ -45,28 +49,62 @@ body {
   color: var(--text-main);
 }
 
+h3 {
+  font-weight: 600;
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+}
+
 .button {
   background-color: var(--btn-bg);
   color: var(--text-main);
-  border: none;
-  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   padding: 10px 15px;
   margin: 8px 0;
   font-size: 1rem;
   cursor: pointer;
   width: 100%;
-  transition: background 0.2s ease;
+  transition: var(--transition);
   box-sizing: border-box;
 }
 
-.button:hover { background-color: var(--btn-hover); }
-.button:active { transform: scale(0.97); }
+.button:hover {
+  background-color: var(--btn-hover);
+}
+
+.button:active {
+  background-color: var(--btn-active);
+  transform: scale(0.98);
+}
 
 .bottom-bar {
   display: flex;
   justify-content: space-between;
   gap: 8px;
   margin-top: 10px;
+}
+
+textarea {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 12px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  font-family: inherit;
+  resize: none;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  background-color: #fafafa;
+  box-sizing: border-box;
+}
+
+.fade {
+  animation: fadeIn 0.4s ease-in-out;
+}
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(10px);}
+  to {opacity: 1; transform: translateY(0);}
 }
 
 /* 넘패드 */
@@ -81,23 +119,25 @@ body {
 }
 
 .numpad-container {
-  background-color: #222;
-  padding: 20px;
+  background-color: #fff;
+  padding: 25px;
   border-radius: 20px;
+  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 #numpad-display {
-  background-color: #fff;
-  color: #000;
+  background-color: #f9f9f9;
+  color: #1d1d1f;
   font-size: 1.4rem;
   text-align: center;
   width: 180px;
   padding: 8px;
   border-radius: 10px;
   margin-bottom: 15px;
+  border: 1px solid #ddd;
 }
 
 .numpad-grid {
@@ -107,16 +147,34 @@ body {
 }
 
 .numpad-button {
-  background-color: #fff;
-  color: #000;
+  background-color: var(--btn-bg);
+  color: var(--text-main);
   font-size: 1.2rem;
-  border: none;
-  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   cursor: pointer;
+  transition: var(--transition);
 }
 
+.numpad-button:hover {
+  background-color: var(--btn-hover);
+}
 .numpad-button:active {
   transform: scale(0.96);
+}
+
+.recommend-item {
+  background: #fafafa;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin: 6px 0;
+  transition: var(--transition);
+}
+
+.recommend-item:hover {
+  background: #f0f0f0;
+  transform: translateY(-2px);
 }
 </style>
 </head>
@@ -125,8 +183,8 @@ body {
 <div class="chat-container">
   <div id="chat-content"></div>
   <div class="bottom-bar">
-    <button class="button" id="backBtn">🔙 뒤로가기</button>
-    <button class="button" id="homeBtn">🏠 처음으로</button>
+    <button class="button" id="backBtn">←</button>
+    <button class="button" id="homeBtn">⌂</button>
     <button class="button" id="heartBtn">💖</button>
   </div>
 </div>
@@ -188,10 +246,15 @@ function scrollTopReset() {
   document.getElementById("chat-content").scrollTop = 0;
 }
 
+function scrollBottom() {
+  const chat = document.getElementById("chat-content");
+  chat.scrollTop = chat.scrollHeight;
+}
+
 function loadHome() {
   const chat = document.getElementById("chat-content");
   chat.innerHTML = `
-    <div style="color:#fff;">
+    <div class="fade">
       <h3>어떤 문제집 추천이 필요하신가요?</h3>
       <button class="button" onclick="selectType('개념서')">개념서</button>
       <button class="button" onclick="selectType('유형 심화서')">유형 심화서</button>
@@ -206,9 +269,9 @@ function selectType(type) {
   const chat = document.getElementById("chat-content");
 
   if (type === "개념서") {
-    chat.innerHTML = `<h3 style="color:#fff;">${type} 난이도를 선택하세요</h3>` + [1,2,3,4].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
+    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` + [1,2,3,4].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
   } else if (type === "유형 심화서") {
-    chat.innerHTML = `<h3 style="color:#fff;">${type} 난이도를 선택하세요</h3>` + [1,2,3,4,5].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
+    chat.innerHTML = `<h3>${type} 난이도를 선택하세요</h3>` + [1,2,3,4,5].map(i => `<button class="button" onclick="showRecommend(${i})">${i}단계</button>`).join('');
   } else {
     showRecommend();
   }
@@ -221,10 +284,10 @@ function showRecommend(level) {
   const chat = document.getElementById("chat-content");
   const books = selectedType === "기출" ? data["기출"] : data[selectedType][selectedLevel];
   chat.innerHTML = `
-    <div style="color:#fff;">
+    <div class="fade">
       <h3>추천 문제집 목록</h3>
       <ul style="padding-left:0;">
-        ${books.map(b => `<li style="margin:6px 0; background:var(--card-bg); color:#000; border-radius:10px; padding:6px 10px; list-style:none;">${b}</li>`).join('')}
+        ${books.map(b => `<li class="recommend-item">${b}</li>`).join('')}
       </ul>
       <button class="button" onclick="openReviewInput()">평가하기</button>
     </div>`;
@@ -234,11 +297,12 @@ function showRecommend(level) {
 function openReviewInput() {
   const chat = document.getElementById("chat-content");
   chat.innerHTML += `
-    <div id="reviewBox">
-      <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..." style="width:100%;max-width:100%;border-radius:10px;padding:8px;margin-top:8px;border:1px solid #999;box-sizing:border-box;"></textarea>
+    <div id="reviewBox" class="fade">
+      <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
       <button class="button" onclick="submitReview()">제출</button>
     </div>`;
-  scrollTopReset();
+  // ✅ 평가창이 추가되면 자동으로 스크롤을 하단으로 이동
+  setTimeout(scrollBottom, 200);
 }
 
 async function submitReview() {
@@ -282,30 +346,30 @@ function checkCode() {
 
 async function loadReviews() {
   const chat = document.getElementById("chat-content");
-  chat.innerHTML = "<h3 style='color:#fff;'>📊 평가 불러오는 중...</h3>";
+  chat.innerHTML = "<h3>📊 평가 불러오는 중...</h3>";
 
   try {
     const res = await fetch(`${SCRIPT_URL}?action=read`);
     const reviews = await res.json();
 
     if (!reviews.length) {
-      chat.innerHTML = "<p style='color:#fff;'>아직 등록된 평가가 없습니다.</p>";
+      chat.innerHTML = "<p>아직 등록된 평가가 없습니다.</p>";
       return;
     }
 
-    chat.innerHTML = "<h3 style='color:#fff;'>📖 사용자 평가 목록</h3>";
+    chat.innerHTML = "<h3>📖 사용자 평가 목록</h3>";
     reviews.reverse().forEach(r => {
       chat.innerHTML += `
-        <div style="margin:10px 0; background:var(--card-bg); color:#000; padding:10px; border-radius:10px;">
+        <div class="recommend-item">
           <b>${r.type}</b> ${r.level ? `${r.level}단계` : ""}<br>
           ${r.review}<br>
-          <small style="color:#555;">${r.datetime}</small>
+          <small style="color:#666;">${r.datetime}</small>
         </div>`;
     });
     scrollTopReset();
   } catch (err) {
     console.error("리뷰 로드 오류:", err);
-    chat.innerHTML = "<p style='color:#fff;'>⚠️ 평가 데이터를 불러오는 중 오류가 발생했습니다.</p>";
+    chat.innerHTML = "<p>⚠️ 평가 데이터를 불러오는 중 오류가 발생했습니다.</p>";
   }
 }
 
