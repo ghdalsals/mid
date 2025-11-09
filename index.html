@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>문제집 추천 알고리즘</title>
 <style>
-/* 🍎 모노톤 Apple-style */
 :root {
   --bg: #f4f4f4;
   --chat-bg: #ffffff;
@@ -102,7 +101,6 @@ textarea {
 }
 .recommend-item:hover { transform: translateY(-2px); }
 
-/* ✅ 이모티콘 (세로 스크롤 방지, 간격 고정) */
 .emoji-container {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -119,56 +117,6 @@ textarea {
 }
 .emoji:hover { transform: scale(1.15); }
 .selected { transform: scale(1.25); filter: drop-shadow(0 0 4px #888); }
-
-/* 넘패드 */
-#numpad {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background-color: rgba(0,0,0,0.6);
-  display: none;
-  justify-content: center;
-  align-items: center;
-}
-
-.numpad-container {
-  background-color: #fff;
-  padding: 25px;
-  border-radius: 20px;
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-#numpad-display {
-  background-color: #f9f9f9;
-  color: #1d1d1f;
-  font-size: 1.4rem;
-  text-align: center;
-  width: 180px;
-  padding: 8px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-}
-
-.numpad-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 60px);
-  grid-gap: 10px;
-}
-
-.numpad-button {
-  background-color: #f2f2f7;
-  color: #000;
-  font-size: 1.2rem;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-.numpad-button:hover { background-color: #e5e5ea; }
 </style>
 </head>
 
@@ -267,24 +215,24 @@ function openSatisfaction() {
         <span class="emoji" data-value="매우 만족">😍</span>
       </div>
     </div>`;
-  document.querySelectorAll(".emoji").forEach(e => e.addEventListener("click", selectSatisfaction));
-  setTimeout(scrollBottom, 200);
-}
-
-function selectSatisfaction(e) {
-  document.querySelectorAll(".emoji").forEach(el => el.classList.remove("selected"));
-  e.target.classList.add("selected");
-  satisfaction = e.target.getAttribute("data-value");
-
-  const chat = document.getElementById("chat-content");
-  if (!document.getElementById("reviewBox")) {
-    chat.innerHTML += `
-      <div id="reviewBox">
-        <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
-        <button class="button" onclick="submitReview()">제출</button>
-      </div>`;
-  }
-  setTimeout(scrollBottom, 200);
+  
+  // ✅ 클릭 시 다른 이모티콘으로 변경 가능
+  document.querySelectorAll(".emoji").forEach(e => {
+    e.addEventListener("click", function() {
+      document.querySelectorAll(".emoji").forEach(el => el.classList.remove("selected"));
+      this.classList.add("selected");
+      satisfaction = this.getAttribute("data-value");
+      if (!document.getElementById("reviewBox")) {
+        chat.innerHTML += `
+          <div id="reviewBox">
+            <textarea id="reviewText" rows="3" placeholder="의견을 작성해주세요..."></textarea>
+            <button class="button" onclick="submitReview()">제출</button>
+          </div>`;
+      }
+      scrollBottom();
+    });
+  });
+  scrollBottom();
 }
 
 async function submitReview() {
